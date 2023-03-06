@@ -1,0 +1,7 @@
+/target/*
+/project/project/*
+/project/target/*
+/.bsp/*
+/.idea/*
+*~
+/resources/AppleTeamId

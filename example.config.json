@@ -1,0 +1,54 @@
+{
+  "timeoutMilli" : 900000,
+  "initialCollectionTimeMilli" : 60000,
+  "verbose" : false,
+  "appium" : "appium",
+  "tmpFolder" : "/tmp/folder/",
+  "mitm" : {
+    "path" : "mitmdump",
+    "addonScript" : "./resources/trafficCollection/mitm-addon.py"
+  },
+  "db" : {
+    "host" : "localhost",
+    "port" : 5432,
+    "name" : "db_name",
+    "user" : "db_user",
+    "pwd"  : "db_pwd"
+  },
+  "consentDialogAnalysis" : {
+    "indicatorsFile" : "./resources/consent/indicators.json",
+    "keywordThreshold" : 1,
+    "maxSizeFactor" : 1.5,
+    "maxColorDeltaE" : 3
+  },
+  "devicePrep" : {
+    "clipboard" : "sd325fEr23q2",
+    "latitude" : 16.0000,
+    "longitude" : 17.000,
+    "altitude" : 100.000
+  },
+  "android" : {
+    "dexdump" : "dexdump",
+    "adb" : "adb",
+    "objection" : "objection",
+    "osVersion" : "12",
+    "apkanalyzer" : "apkanalyzer"
+  },
+  "ios" : {
+    "rootpwd" : "alpine",
+    "ip" : "iPhone IP",
+    "ideviceinstaller" : "ideviceinstaller",
+    "ideviceinfo" : "ideviceinfo",
+    "fridaps" : "frida-ps",
+    "deviceName" : "Device Name",
+    "xcodeOrgId" : "xoodeOrgId",
+    "xcodeSigningId" : "iPhone Developer",
+    "osv" : "14.5",
+    "permissionPopup" : {
+      "interaction" : "deny",
+      "text" : ["would like to", "wants to join", "turn on bluetooth to allow"],
+      "allowButton" : ["allow","ok","join","settings","allow access to all photos"],
+      "dontAllowButton" : ["don.t allow", "close", "cancel"]
+    }
+  }
+}
