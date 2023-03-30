@@ -73,3 +73,45 @@ testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 
 checkstyleConfigLocation := CheckstyleConfigLocation.File("config/checkstyle/google_checks.xml")
 checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Info)
+
+sonatypeProfileName := "de.halcony"
+// this is required for sonatype sync requirements
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/simkoc/scala-plotalyzer"),
+    "scm:git@github.com:simkoc/scala-plotalyzer.git"
+  )
+)
+// this is required for sonatype sync requirements
+ThisBuild / developers := List(
+  Developer(
+    id   = "simkoc",
+    name = "Simon Koch",
+    email = "ossrh@halcony.de",
+    url = url("https://github.com/simkoc/")
+  )
+)
+// this is required for sonatype sync requirements
+ThisBuild / licenses := List("MIT" -> url("https://github.com/simkoc/scala-appanalyzer/blob/master/LICENSE"))
+// this is required for sonatype sync requirements
+ThisBuild / homepage := Some(url("https://github.com/simkoc/scala-appanalyzer"))
+
+
+// below is pretty much cargo cult/fuzzing....
+import ReleaseTransformations._
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseVersionBump := sbtrelease.Version.Bump.Bugfix
+publishTo := sonatypePublishToBundle.value
+releaseProcess := Seq[ReleaseStep](
+  runClean,
+  runTest,
+  inquireVersions,
+  setReleaseVersion,
+  commitReleaseVersion,
+  publishArtifacts,
+  releaseStepCommand("publishSigned"),
+  releaseStepCommand("sonatypeBundleRelease"),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges,
+)
