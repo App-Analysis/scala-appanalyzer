@@ -7,3 +7,4 @@
 /resources/AppleTeamId
 config.json
 /plugins/*
+/resources/trafficCollection/__pycache__/
