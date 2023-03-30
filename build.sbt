@@ -1,5 +1,6 @@
 name := "appanalyzer"
 ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / versionScheme := Some("semver-spec")
 organization := "de.halcony"
 
 enablePlugins(JavaAppPackaging)
