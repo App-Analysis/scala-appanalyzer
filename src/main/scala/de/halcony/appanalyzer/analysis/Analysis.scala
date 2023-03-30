@@ -37,10 +37,10 @@ import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class Analysis(description: String,
-                         app: MobileApp,
-                         actor: ActorPlugin,
-                         device: Device,
-                         conf: Config)
+               app: MobileApp,
+               actor: ActorPlugin,
+               device: Device,
+               conf: Config)
     extends LogSupport {
 
   private var id: Option[Int] = None

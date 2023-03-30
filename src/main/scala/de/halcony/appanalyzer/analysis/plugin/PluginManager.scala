@@ -76,7 +76,7 @@ class PluginManager(conf: PluginManagerConfiguration) extends LogSupport {
     jarFile.entries().asScala.foreach { entry =>
       if (!entry.isDirectory && entry.getName.endsWith(".class")) {
         val className =
-          entry.getName.substring(0, entry.getName.length - 8).replace("/", ".")
+          entry.getName.substring(0, entry.getName.length - 6).replace("/", ".")
         classloader.loadClass(className)
       }
     }

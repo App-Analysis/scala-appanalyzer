@@ -44,13 +44,7 @@ case class iOS(rootpwd: String,
       source.close()
     }
   }
-
 }
-
-case class ConsentDialogAnalysis(indicatorsFile: String,
-                                 keywordThreshold: Int,
-                                 maxSizeFactor: Double,
-                                 maxColorDeltaE: Int)
 
 case class Mitmproxy(path: String, addonScript: String)
 
@@ -60,15 +54,13 @@ case class Database(host: String,
                     user: String,
                     pwd: String)
 
-case class Config(plugin: PluginManagerConfiguration,
-                  timeoutMilli: Long,
+case class Config(timeoutMilli: Long,
                   verbose: Boolean,
-                  initialCollectionTimeMilli: Long,
                   appium: String,
                   tmpFolder: String,
                   mitm: Mitmproxy,
+                  plugin: PluginManagerConfiguration,
                   db: Database,
-                  consentDialogAnalysis: ConsentDialogAnalysis,
                   devicePrep: DevicePreparation,
                   android: AndroidAnalysis,
                   ios: iOS)
@@ -97,9 +89,6 @@ object Config extends DefaultJsonProtocol {
   implicit val devicePreparationFormat: RootJsonFormat[DevicePreparation] =
     jsonFormat4(DevicePreparation)
 
-  implicit val consentDialogAnalysisFormat
-    : RootJsonFormat[ConsentDialogAnalysis] = jsonFormat4(ConsentDialogAnalysis)
-
   implicit val remotePluginConfigFormat: RootJsonFormat[RemotePluginConfig] =
     jsonFormat2(RemotePluginConfig)
 
@@ -107,7 +96,7 @@ object Config extends DefaultJsonProtocol {
     : RootJsonFormat[PluginManagerConfiguration] =
     jsonFormat2(PluginManagerConfiguration)
 
-  implicit val configFormat: RootJsonFormat[Config] = jsonFormat12(Config.apply)
+  implicit val configFormat: RootJsonFormat[Config] = jsonFormat10(Config.apply)
 
   /** given a file path parses the configuration file
     *

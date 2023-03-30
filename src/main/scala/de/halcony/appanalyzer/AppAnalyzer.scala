@@ -40,6 +40,7 @@ object AppAnalyzer extends LogSupport {
       "config",
       Some("./config.json"),
       " the configuration file")
+    .addSubparser(PluginManager.parser)
     .addSubparser(Parser("removedAnalysis", "delete listed analysis ids")
       .addPositional("analysisIds", "csv list of ids or file containing list of ids")
       .addDefault[(ParsingResult,Config) => Unit]("func", deleteAnalysisMain))
@@ -52,13 +53,14 @@ object AppAnalyzer extends LogSupport {
         .addPositional("path", "path to the required data for the chosen action")
         .addFlag("ephemeral", "e", "ephemeral", "if set the experiment will be deleted directly after execution")
         .addFlag("empty","w","without-app","if set then no app is installed and the analysis is run on the raw OS")
+        .addOptional("description","d","description",Some(""),"an optional experiment description")
         .addOptional("batchSize", "b", "batch", None, "limit the amount of apps that are analyzed in bulk")
         .addOptional("continue", "r", "resume", None, "provides the experiment to be continued")
         .addOptional("parameters","p","parameters",None,"a csv list of <key>=<value> pairs")
         .addDefault[(ParsingResult,Config) => Unit]("func",runPluginExperiment,"runs an experiment using the specified plugin")))
 
 
-  /** main function parsing config and command line args
+  /** main function parsing config and command line
     *
     * @param args the command line args provided by the jvm
     */

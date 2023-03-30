@@ -1,6 +1,5 @@
 {
   "timeoutMilli" : 900000,
-  "initialCollectionTimeMilli" : 60000,
   "verbose" : false,
   "appium" : "appium",
   "tmpFolder" : "/tmp/folder/",
@@ -8,18 +7,16 @@
     "path" : "mitmdump",
     "addonScript" : "./resources/trafficCollection/mitm-addon.py"
   },
+  "plugin" : {
+    "folder" : "./plugins/",
+    "available" : {}
+  },
   "db" : {
     "host" : "localhost",
     "port" : 5432,
     "name" : "db_name",
     "user" : "db_user",
     "pwd"  : "db_pwd"
-  },
-  "consentDialogAnalysis" : {
-    "indicatorsFile" : "./resources/consent/indicators.json",
-    "keywordThreshold" : 1,
-    "maxSizeFactor" : 1.5,
-    "maxColorDeltaE" : 3
   },
   "devicePrep" : {
     "clipboard" : "sd325fEr23q2",

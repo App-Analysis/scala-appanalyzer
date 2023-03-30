@@ -3,6 +3,8 @@ ThisBuild / scalaVersion := "2.13.7"
 ThisBuild / versionScheme := Some("semver-spec")
 organization := "de.halcony"
 
+enablePlugins(JavaAppPackaging)
+
 libraryDependencies ++= Seq(
   "org.scalatest"          %% "scalatest"               % "3.1.0" % Test,
   "de.halcony"             %% "scala-argparse"          % "1.1.11",
@@ -67,6 +69,8 @@ scalacOptions ++= Seq(
 
 compile / javacOptions ++= Seq("-Xlint:all", "-Xlint:-cast", "-g")
 Test / fork :=  false
+run / fork := true
+cancelable in Global := true
 Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
 
