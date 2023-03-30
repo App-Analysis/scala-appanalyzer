@@ -1,6 +1,6 @@
-name := "scala-appanalyzer"
+name := "appanalyzer"
 ThisBuild / scalaVersion := "2.13.7"
-organization := "de.tubs.cs.ias"
+organization := "de.halcony"
 
 enablePlugins(JavaAppPackaging)
 
@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "org.postgresql"         % "postgresql"               % "42.2.18",
   "com.mchange"            % "mchange-commons-java"     % "0.2.20",
   "org.scala-lang.modules" %% "scala-xml"               % "2.0.1",
+  "org.clapper"            %% "classutil"               % "1.5.0",
 )
 
 ThisBuild / resolvers ++= Seq(
