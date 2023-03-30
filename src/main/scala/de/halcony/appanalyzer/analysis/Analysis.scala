@@ -36,7 +36,7 @@ import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-protected class Analysis(description: String,
+class Analysis(description: String,
                          app: MobileApp,
                          actor: ActorPlugin,
                          device: Device,
