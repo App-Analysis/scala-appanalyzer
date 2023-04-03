@@ -9,7 +9,12 @@
   },
   "plugin" : {
     "folder" : "./plugins/",
-    "available" : {}
+      "available" : {
+        "TrafficCollection": {
+          "owner": "simkoc",
+          "repo": "appanalyzer-plugin-trafficcollection"
+        }
+      }
   },
   "db" : {
     "host" : "localhost",

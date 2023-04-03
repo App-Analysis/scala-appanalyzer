@@ -25,7 +25,7 @@ class PluginManager(conf: PluginManagerConfiguration) extends LogSupport {
     */
   private val PLUGIN_DIRECTORY = conf.folder
 
-  /** the fully qulified name of the AnalysisPlugin trait
+  /** the fully qualified name of the AnalysisPlugin trait
     */
   private val PLUGIN_INTERFACE =
     "de.halcony.appanalyzer.analysis.plugin.ActorPlugin"
@@ -180,7 +180,7 @@ object PluginManager extends LogSupport {
         "r",
         "revision",
         None,
-        "if set will isntall (if available) the specified version of the plugin")
+        "if set will install (if available) the specified version of the plugin")
       .addPositional("plugin", "the name of the plugin")
       .addDefault[(ParsingResult, HasPluginManagerConfiguration) => Unit](
         "func",
