@@ -35,7 +35,6 @@
        ```
        adb push /path/frida-server-android /data/local/tmp/frida-server
        adb shell chmod 755 /data/local/tmp/frida-server
-       adb shell 'su -c /data/local/tmp/frida-server &'
        ```
       The last command will block your terminal as frida is running 'inside' it.
 3. install appium globally
@@ -74,7 +73,7 @@
 
 - For the Samsung Galaxy A13 after rooting
     - if your phone is annoying with a popup for carrier configuration removing the CID manager helped.
-- to check if the framework is working with your set-up, run `./aa.sh android_device <path-to-a-random-apk> functionalityCheck`
+- to check if the framework is working with your set-up, run `./aa.sh android_device run functionalityCheck`
 
 ### 2. Traffic Collection
 
