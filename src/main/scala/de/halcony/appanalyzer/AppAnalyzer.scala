@@ -35,6 +35,7 @@ object AppAnalyzer extends LogSupport {
 
   val parser: Parser = Parser("AppAnalyzer",
     "run apps and analyze their consent dialogs")
+    .addFlag("verbose","v","verbose","if set a stacktrace is provided with any fatal error")
     .addOptional("config",
       "c",
       "config",
@@ -59,6 +60,7 @@ object AppAnalyzer extends LogSupport {
         .addOptional("parameters","p","parameters",None,"a csv list of <key>=<value> pairs")
         .addDefault[(ParsingResult,Config) => Unit]("func",runPluginExperiment,"runs an experiment using the specified plugin")))
 
+  private object IgnoreMe extends Throwable
 
   /** main function parsing config and command line
     *
@@ -66,13 +68,16 @@ object AppAnalyzer extends LogSupport {
     */
   def main(args: Array[String]): Unit = {
     try {
-      val pargs = parser.parse(args)
-      val conf = Config.parse(pargs.getValue[String]("config"))
-      pargs.getValue[(ParsingResult, Config) => Unit]("func")(pargs, conf)
+      val pargs: ParsingResult = parser.parse(args)
+      try {
+        val conf = Config.parse(pargs.getValue[String]("config"))
+        pargs.getValue[(ParsingResult, Config) => Unit]("func")(pargs, conf)
+      } catch {
+        case x: Throwable =>
+          error(x.getMessage + (if(pargs.getValue[Boolean]("verbose")) "\n" + x.getStackTrace.mkString("\n") else ""))
+      }
     } catch {
-      case _: ParsingException =>
-      case x: Throwable =>
-        println(x)
+      case _ : ParsingException =>
     }
   }
 

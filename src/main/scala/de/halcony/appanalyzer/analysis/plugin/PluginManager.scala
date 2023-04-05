@@ -32,10 +32,16 @@ class PluginManager(conf: PluginManagerConfiguration) extends LogSupport {
 
   /** the jars contained in the PLUGIN_DIRECTORY folder on startup
     */
-  private val jars: List[File] = new File(PLUGIN_DIRECTORY)
-    .listFiles()
-    .filter(_.getPath.endsWith(".jar"))
-    .toList
+  private val jars: List[File] =
+    if(new File(PLUGIN_DIRECTORY).exists()) {
+      new File(PLUGIN_DIRECTORY)
+        .listFiles()
+        .filter(_.getPath.endsWith(".jar"))
+        .toList
+    } else {
+      throw new RuntimeException(
+        s"there is no directory $PLUGIN_DIRECTORY, please create the directory with the required read and write access")
+    }
 
   /** a map of the plugins and the name of the main classes
     */
