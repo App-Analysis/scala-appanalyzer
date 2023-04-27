@@ -107,7 +107,6 @@ class Analysis(description: String,
     trafficCollectionStart.getOrElse(throw new FatalError(
       "requesting traffic collection start time without ever starting traffic collection"))
 
-
   def stopTrafficCollection(): Unit = {
     info("stopping traffic collection")
     activeTrafficCollection match {

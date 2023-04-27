@@ -54,6 +54,7 @@ object AppAnalyzer extends LogSupport {
         .addPositional("plugin","the name of the actor plugin providing the analysis capabilities")
         .addFlag("ephemeral", "e", "ephemeral", "if set the experiment will be deleted directly after execution")
         .addFlag("empty","w","without-app","if set then no app is installed and the analysis is run on the raw OS")
+        .addOptional("only","o","only",None,"a file or a csv list listing app ids that shall be analyzed (any other app is ignored)")
         .addOptional("description","d","description",Some(""),"an optional experiment description")
         .addOptional("batchSize", "b", "batch", None, "limit the amount of apps that are analyzed in bulk")
         .addOptional("continue", "r", "resume", None, "provides the experiment to be continued")
@@ -228,6 +229,23 @@ object AppAnalyzer extends LogSupport {
     ret
   }
 
+  private def getOnlyApps(only : Option[String]) : Option[Set[String]] = {
+    only match {
+      case Some(onlyElement) =>
+        if(new File(onlyElement).exists()) {
+          val source = Source.fromFile(onlyElement)
+          try {
+            Some(source.getLines().toSet)
+          } finally {
+            source.close()
+          }
+        } else {
+          Some(onlyElement.split(",").toSet)
+        }
+      case None => None
+    }
+  }
+
   /** takes the provided path and returns the limited subset of all contained apps
    *
    * @param pargs the parsed command line arguments
@@ -256,7 +274,12 @@ object AppAnalyzer extends LogSupport {
         filterAppsInFolder(folder,ipas,conf,PlatformOS.iOS,filtering)
 
     }
-    apps.slice(0,getBatchSize(pargs).getOrElse(apps.length))
+    val appSubset = apps.slice(0,getBatchSize(pargs).getOrElse(apps.length))
+    getOnlyApps(pargs.get[OptionalValue[String]]("only").value) match {
+      case Some(filterList) =>
+        appSubset.filter(app => filterList.contains(app.id))
+      case None => appSubset
+    }
   }
 
 
