@@ -33,7 +33,7 @@ class PluginManager(conf: PluginManagerConfiguration) extends LogSupport {
   /** the jars contained in the PLUGIN_DIRECTORY folder on startup
     */
   private val jars: List[File] =
-    if(new File(PLUGIN_DIRECTORY).exists()) {
+    if (new File(PLUGIN_DIRECTORY).exists()) {
       new File(PLUGIN_DIRECTORY)
         .listFiles()
         .filter(_.getPath.endsWith(".jar"))
