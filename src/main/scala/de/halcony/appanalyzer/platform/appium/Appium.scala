@@ -6,6 +6,7 @@ import de.halcony.appanalyzer.platform.PlatformOS
 import de.halcony.appanalyzer.platform.device.Device
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import io.appium.java_client.AppiumDriver
+import io.appium.java_client.clipboard.HasClipboard
 import org.openqa.selenium.remote.ScreenshotException
 import org.openqa.selenium.{By, OutputType, WebElement}
 import wvlet.log.LogSupport
@@ -128,6 +129,10 @@ trait Appium extends LogSupport {
           s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}")
         None
     }
+  }
+
+  def setClipboardContent(content : String) : Unit = {
+    driver.get.asInstanceOf[HasClipboard].setClipboardText(content)
   }
 
 }
