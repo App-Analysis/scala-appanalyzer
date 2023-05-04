@@ -73,6 +73,8 @@ class Analysis(description: String,
 
   def getId: Int = id.get
 
+  def getCurrentApp : MobileApp = app
+
   def startDummyTrafficCollection(): Unit = {
     info("starting dummy traffic collection")
     activeTrafficCollection match {
