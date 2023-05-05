@@ -367,6 +367,7 @@ object Analysis extends LogSupport {
                   device: Device,
                   conf: Config): Unit = {
     info(s"running analysis for ${app.toString}")
+    device.ensureDevice()
     try {
       val logger = this.logger
       Experiment.withExperimentErrorLogging {
