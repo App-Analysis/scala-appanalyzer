@@ -5,5 +5,5 @@ package de.halcony.appanalyzer.platform
   */
 object PlatformOS extends Enumeration {
   type PlatformOS = Value
-  val Android, iOS = Value
+  val Android, AndroidEmulatorRoot, iOS = Value
 }

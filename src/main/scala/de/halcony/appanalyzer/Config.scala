@@ -54,6 +54,12 @@ case class Database(host: String,
                     user: String,
                     pwd: String)
 
+case class Emulator(emulator: String,
+                    avd: String,
+                    snapshot: Option[String],
+                    proxyIP: Option[String],
+                    proxyPort: Option[String])
+
 case class Config(timeoutMilli: Long,
                   verbose: Boolean,
                   appium: String,
@@ -62,6 +68,7 @@ case class Config(timeoutMilli: Long,
                   plugin: PluginManagerConfiguration,
                   db: Database,
                   devicePrep: DevicePreparation,
+                  emulator: Option[Emulator],
                   android: AndroidAnalysis,
                   ios: iOS)
     extends HasPluginManagerConfiguration {
@@ -96,7 +103,10 @@ object Config extends DefaultJsonProtocol {
     : RootJsonFormat[PluginManagerConfiguration] =
     jsonFormat2(PluginManagerConfiguration)
 
-  implicit val configFormat: RootJsonFormat[Config] = jsonFormat10(Config.apply)
+  implicit val emulatorFormat: RootJsonFormat[Emulator] =
+    jsonFormat5(Emulator)
+
+  implicit val configFormat: RootJsonFormat[Config] = jsonFormat11(Config.apply)
 
   /** given a file path parses the configuration file
     *

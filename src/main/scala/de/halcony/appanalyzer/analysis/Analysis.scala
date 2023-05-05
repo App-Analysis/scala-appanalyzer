@@ -73,7 +73,7 @@ class Analysis(description: String,
 
   def getId: Int = id.get
 
-  def getCurrentApp : MobileApp = app
+  def getCurrentApp: MobileApp = app
 
   def startDummyTrafficCollection(): Unit = {
     info("starting dummy traffic collection")
@@ -167,7 +167,7 @@ class Analysis(description: String,
                                    appium: Appium,
                                    device: Device): Interface = {
     device.PLATFORM_OS match {
-      case PlatformOS.Android =>
+      case PlatformOS.Android | PlatformOS.AndroidEmulatorRoot =>
         interaction.Interface(this, appium, flat = false, interfaceComment) // nothing to do here
       case platform.PlatformOS.iOS =>
         if (appium.asInstanceOf[iOSAppium].getRidOfAlerts(conf))
@@ -366,81 +366,85 @@ object Analysis extends LogSupport {
                   app: MobileApp,
                   device: Device,
                   conf: Config): Unit = {
-    val logger = this.logger
-    Experiment.withExperimentErrorLogging {
-      app.insert()
-      val analysis = Future {
-        var continue = false
-        try {
-          if (app.id != "EMPTY") {
-            device.installApp(app)
-            device.setAppPermissions(app.id)
-          }
-          do {
-            logger.info(
-              s"setting up analysis ${actor.getDescription} for app $app")
-            val analysis =
-              new Analysis(actor.getDescription, app, actor, device, conf)
-            setCurrentAnalysis(analysis)
-            analysis.insert()
-            try {
-              analysis.performAnalysis()
-              val (c, reset) = actor.restartApp
-              continue = c
-              if (reset && c) {
-                logger.info("actor requests app reset")
-                if (app.id != "EMPTY") {
-                  device.uninstallApp(app.id)
-                  device.installApp(app)
-                  device.setAppPermissions(app.id)
-                }
-              }
-              analysis.finish(true)
-            } catch {
-              case x: UnableToStartApp =>
-                Experiment.addEncounteredError(x)
-                continue = false
-              case x: StaleElementReferenceException =>
-                analysis.addEncounteredError(new StaleInterfaceElement(x), None)
-                analysis.finish(false)
-                continue = false
-              case x: WebDriverException =>
-                analysis.addEncounteredError(new WebDriverHissyFit(x), None)
-                continue = false
+    info(s"running analysis for ${app.toString}")
+    try {
+      val logger = this.logger
+      Experiment.withExperimentErrorLogging {
+        app.insert()
+        val analysis = Future {
+          var continue = false
+          try {
+            if (app.id != "EMPTY") {
+              device.installApp(app)
+              device.setAppPermissions(app.id)
             }
-          } while (continue)
-        } catch {
-          case x: AnalysisFatal =>
-            error(x.getMessage)
-          case x: UnableToInstallApp =>
-            Experiment.addEncounteredError(x)
-          case x: UnableToUninstallApp =>
-            Experiment.addEncounteredError(x)
-        } finally {
-          unsetCurrentAnalysis()
-        }
-      }
-      try {
-        Await.result(analysis, Duration(conf.timeoutMilli, MILLISECONDS))
-      } catch {
-        case _: TimeoutException =>
-          error(s"the analysis of $app took too long, trying to kill")
-          stopCurrentAnalysis()
-          Await.result(analysis, Inf)
-          error("kill success")
-      } finally {
-        try {
-          if (app.id != "EMPTY") {
-            device.uninstallApp(app.id)
+            do {
+              logger.info(
+                s"setting up analysis ${actor.getDescription} for app $app")
+              val analysis =
+                new Analysis(actor.getDescription, app, actor, device, conf)
+              setCurrentAnalysis(analysis)
+              analysis.insert()
+              try {
+                analysis.performAnalysis()
+                val (c, reset) = actor.restartApp
+                continue = c
+                if (reset && c) {
+                  logger.info("actor requests app reset")
+                  if (app.id != "EMPTY") {
+                    device.uninstallApp(app.id)
+                    device.installApp(app)
+                    device.setAppPermissions(app.id)
+                  }
+                }
+                analysis.finish(true)
+              } catch {
+                case x: UnableToStartApp =>
+                  Experiment.addEncounteredError(x)
+                  continue = false
+                case x: StaleElementReferenceException =>
+                  analysis.addEncounteredError(new StaleInterfaceElement(x),
+                                               None)
+                  analysis.finish(false)
+                  continue = false
+                case x: WebDriverException =>
+                  analysis.addEncounteredError(new WebDriverHissyFit(x), None)
+                  continue = false
+              }
+            } while (continue)
+          } catch {
+            case x: AnalysisFatal =>
+              error(x.getMessage)
+            case x: UnableToInstallApp =>
+              Experiment.addEncounteredError(x)
+            case x: UnableToUninstallApp =>
+              Experiment.addEncounteredError(x)
+          } finally {
+            unsetCurrentAnalysis()
           }
-          device.clearStuckModals()
+        }
+        try {
+          Await.result(analysis, Duration(conf.timeoutMilli, MILLISECONDS))
         } catch {
-          case x: UnableToUninstallApp =>
-            Experiment.addEncounteredError(x)
+          case _: TimeoutException =>
+            error(s"the analysis of $app took too long, trying to kill")
+            stopCurrentAnalysis()
+            Await.result(analysis, Inf)
+            error("kill success")
+        } finally {
+          try {
+            if (app.id != "EMPTY") {
+              device.uninstallApp(app.id)
+            }
+            device.clearStuckModals()
+          } catch {
+            case x: UnableToUninstallApp =>
+              Experiment.addEncounteredError(x)
+          }
         }
       }
-    }
-    info(s"analysis of app $app is done")
+      info(s"analysis of app $app is done")
+    } finally {}
   }
 
 }

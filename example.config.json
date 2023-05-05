@@ -16,6 +16,13 @@
         }
       }
   },
+  "emulator" : {
+    "emulator" : "/path/to/emulator",
+    "avd" : "name-of-avd",
+    "snapshot" : "thesnapshottouseifset",
+    "proxyIP" : "theipoftheproxyifset",
+    "proxyPort" : "theportoftheproxyifset"
+  },
   "db" : {
     "host" : "localhost",
     "port" : 5432,

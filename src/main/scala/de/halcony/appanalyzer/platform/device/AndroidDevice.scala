@@ -36,6 +36,9 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   private var runningFrida
     : Option[(Process, ListBuffer[String], ListBuffer[String])] = None
 
+  override def startDevice()
+    : Unit = {} // the smartphone is supposed to be already on
+
   private def detectRunningFrida(): Option[String] = {
     val cmd = s"${conf.android.adb} shell 'ps -e | grep frida-server'"
     try {
@@ -95,6 +98,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           s"${conf.android.adb} shell 'su -c /data/local/tmp/frida-server'")
           .run(ProcessLogger(in => stdin.append(in), err => stderr.append(err)))
       runningFrida = Some((process, stdin, stderr))
+      Thread.sleep(2000) // this ensures that if frida dies on startup we can see/catch it
       if (!process.isAlive()) {
         increaseFailedInteractions()
         runningFrida = None

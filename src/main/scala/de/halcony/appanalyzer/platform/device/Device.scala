@@ -40,6 +40,10 @@ trait Device extends LogSupport {
     }
   }
 
+  def startDevice(): Unit = {} // usually we do not need to boot up a device
+
+  def stopDevice(): Unit = {} // usually we do not need to stop a device
+
   protected def resetFailedInteractions(): Unit = failedInteractions = 0
 
   val PLATFORM_OS: PlatformOS

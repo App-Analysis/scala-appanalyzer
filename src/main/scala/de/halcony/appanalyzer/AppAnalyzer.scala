@@ -7,15 +7,16 @@ import de.halcony.appanalyzer.appbinary.MobileApp
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
-import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOS.{Android, AndroidEmulatorRoot, PlatformOS}
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.Device
+import de.halcony.appanalyzer.platform.device.{AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOS, device}
 import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
+
 import java.io.{File, FileWriter}
 import java.util.concurrent.Executors
 import scala.collection.mutable.{Map => MMap}
@@ -46,7 +47,7 @@ object AppAnalyzer extends LogSupport {
       .addPositional("analysisIds", "csv list of ids or file containing list of ids")
       .addDefault[(ParsingResult,Config) => Unit]("func", deleteAnalysisMain))
     .addSubparser(Parser("run","run an action/analysis")
-      .addPositional("platform","the platform to be analyzed [android_device,android_emulator,ios]")
+      .addPositional("platform","the platform to be analyzed [android_device,android_emulator_root,ios]")
       .addPositional("path", "path to the required data for the chosen action")
       .addSubparser(Parser("functionalityCheck", "run through all fundamental API actions to check if it works")
         .addDefault[(ParsingResult, Config) => Unit]("func", functionalityCheck))
@@ -132,6 +133,7 @@ object AppAnalyzer extends LogSupport {
   private def getDevice(pargs: ParsingResult, conf: Config): Device = {
     pargs.getValue[String]("platform") match {
       case "android_device" => device.AndroidDevice(conf)
+      case "android_emulator_root" => new AndroidEmulatorRoot(conf)
       case "ios" => device.iOSDevice(conf)
       case x =>
         throw new RuntimeException(s"device type $x is not yet supported")
@@ -195,7 +197,7 @@ object AppAnalyzer extends LogSupport {
     val manifestFilePath = s"$folderPath/manifest.json"
     val manifest = MMap(readManifestFile(manifestFilePath).toList :_*)
     val inspector = os match {
-      case Android => APK(conf)
+      case Android | AndroidEmulatorRoot => APK(conf)
       case PlatformOS.iOS => IPA(conf)
     }
     val alreadyChecked : Set[String] = if(filtering) Experiment.getAnalyzedApps.map(_.id).toSet else Set()
@@ -256,7 +258,7 @@ object AppAnalyzer extends LogSupport {
   private def getRelevantApps(pargs : ParsingResult, device : Device, conf : Config, filtering : Boolean = true) : List[MobileApp] = {
     val path = pargs.getValue[String]("path")
     val apps = device.PLATFORM_OS match {
-      case Android =>
+      case Android | AndroidEmulatorRoot =>
         val (apks,folder) = if(new File(path).isDirectory) {
           (new File(path).listFiles().filter(_.isFile).filter(_.getPath.endsWith(".apk")).map(_.getPath).toList,path)
         }  else {
@@ -319,6 +321,7 @@ object AppAnalyzer extends LogSupport {
         Experiment.addEncounteredError(x)
     } finally {
       device.resetDevice()
+      device.stopDevice() // this should do anything for physical devices but stops the emulator for a clean restart
       if (pargs.getValue[Boolean]("ephemeral")) {
         Experiment.deleteCurrentExperiment()
         info("ephemeral experiment is done")

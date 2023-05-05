@@ -56,6 +56,8 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
+  override def startDevice(): Unit = {} // the iPhone is supposed to be already on
+
   override def stopFrida(): Unit = {
     runningFrida match {
       case Some(_) =>

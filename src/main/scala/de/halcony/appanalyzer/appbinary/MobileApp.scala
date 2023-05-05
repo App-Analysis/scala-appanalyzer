@@ -16,6 +16,7 @@ case class MobileApp(id: String, version: String, os: PlatformOS, path: String)
     */
   def getOsString: String = os match {
     case PlatformOS.Android                  => "android"
+    case PlatformOS.AndroidEmulatorRoot      => "android_emulator_root"
     case appanalyzer.platform.PlatformOS.iOS => "ios"
   }
 
