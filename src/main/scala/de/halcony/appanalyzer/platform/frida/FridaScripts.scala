@@ -13,7 +13,7 @@ trait FridaScripts {
 object FridaScripts {
 
   def platform(platform: PlatformOS): FridaScripts = platform match {
-    case PlatformOS.Android | PlatformOS.AndroidEmulatorRoot =>
+    case PlatformOS.Android =>
       AndroidFridaScripts
     case halcony.appanalyzer.platform.PlatformOS.iOS =>
       iOSFridaScripts

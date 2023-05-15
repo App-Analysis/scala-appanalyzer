@@ -152,7 +152,7 @@ object Appium extends LogSupport {
   def withRunningAppium[T](appId: String, conf: Config, device: Device)(
       func: Appium => T): T = {
     val appium: Appium = device.PLATFORM_OS match {
-      case PlatformOS.Android | PlatformOS.AndroidEmulatorRoot =>
+      case PlatformOS.Android =>
         new AndroidAppium(conf)
       case appanalyzer.platform.PlatformOS.iOS =>
         new iOSAppium(conf)
@@ -165,8 +165,7 @@ object Appium extends LogSupport {
         case x: Throwable =>
           error(s"encountered appium start error: ${x.getMessage}")
           device.PLATFORM_OS match {
-            case appanalyzer.platform.PlatformOS.Android |
-                PlatformOS.AndroidEmulatorRoot =>
+            case appanalyzer.platform.PlatformOS.Android =>
               info("restarting the device and performing reconnect")
               appium.stopAppiumServer()
               device.restartPhone()

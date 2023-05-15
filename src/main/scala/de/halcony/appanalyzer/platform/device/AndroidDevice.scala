@@ -30,6 +30,9 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     *
     */
   override val PLATFORM_OS: PlatformOS = Android
+  override val EMULATOR: Boolean = false
+  override val ROOT: Boolean = true
+
   var objection: Option[Process] = None
   private var packageAnalysis: Option[Analysis] = None
 
@@ -165,7 +168,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       throw new FatalError("there is no device reachable via adb")
   }
 
-  private def restartAdb(): Unit = {
+  protected def restartAdb(): Unit = {
     warn("restarting host adb server")
     s"${conf.android.adb} kill-server".!!
     s"${conf.android.adb} start-server".!!

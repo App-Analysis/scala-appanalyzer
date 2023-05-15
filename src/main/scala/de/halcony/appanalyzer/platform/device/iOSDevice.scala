@@ -15,6 +15,9 @@ import scala.sys.process._
 case class iOSDevice(conf: Config) extends Device with LogSupport {
 
   override val PLATFORM_OS: PlatformOS = iOS
+  override val EMULATOR: Boolean = false
+  override val ROOT: Boolean = true
+
   var objection: Option[Process] = None
   private var runningFrida: Option[Process] = None
 

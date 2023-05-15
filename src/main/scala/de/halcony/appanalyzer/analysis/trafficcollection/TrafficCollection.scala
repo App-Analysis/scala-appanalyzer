@@ -60,7 +60,8 @@ class TrafficCollection(analysis: Int,
 
   protected def startDumbProxy(): Unit = {
     mitmproxy = Some(
-      Process(s"${conf.mitm.path}").run(ProcessLogger(_ => (), _ => ())))
+      Process(s"${conf.mitm.path} --mode transparent --allow-hosts mitm.it")
+        .run(ProcessLogger(_ => (), _ => ())))
   }
 
   protected def start(): Unit = {

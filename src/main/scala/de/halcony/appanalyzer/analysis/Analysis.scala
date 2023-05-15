@@ -4,6 +4,7 @@ import de.halcony.appanalyzer.analysis.exceptions.{
   AnalysisFatal,
   InterfaceAnalysisCondition,
   MissingInterfaceElement,
+  SkipThisApp,
   StaleInterfaceElement,
   UncaughtCondition,
   WebDriverHissyFit
@@ -30,6 +31,7 @@ import org.openqa.selenium.{StaleElementReferenceException, WebDriverException}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import spray.json.{JsObject, JsString}
 import wvlet.log.LogSupport
+
 import java.time.ZonedDateTime
 import scala.concurrent.duration.Duration.Inf
 import scala.concurrent.duration.{Duration, MILLISECONDS}
@@ -48,6 +50,11 @@ class Analysis(description: String,
   private var trafficCollectionStart: Option[ZonedDateTime] = None
   private var stop: Boolean = false
   private var running: Boolean = false
+  private var collectInterfaceElements: Boolean = true
+
+  def setCollectInterfaceElements(value: Boolean): Unit = {
+    collectInterfaceElements = value
+  }
 
   /** set the running state of the analysis
     *
@@ -167,13 +174,22 @@ class Analysis(description: String,
                                    appium: Appium,
                                    device: Device): Interface = {
     device.PLATFORM_OS match {
-      case PlatformOS.Android | PlatformOS.AndroidEmulatorRoot =>
-        interaction.Interface(this, appium, flat = false, interfaceComment) // nothing to do here
+      case PlatformOS.Android =>
+        interaction.Interface(this,
+                              appium,
+                              flat = !collectInterfaceElements,
+                              interfaceComment) // nothing to do here
       case platform.PlatformOS.iOS =>
         if (appium.asInstanceOf[iOSAppium].getRidOfAlerts(conf))
-          interaction.Interface(this, appium, flat = false, interfaceComment)
+          interaction.Interface(this,
+                                appium,
+                                flat = !collectInterfaceElements,
+                                interfaceComment)
         else
-          interaction.Interface(this, appium, flat = false, interfaceComment)
+          interaction.Interface(this,
+                                appium,
+                                flat = !collectInterfaceElements,
+                                interfaceComment)
     }
   }
 
@@ -400,8 +416,14 @@ object Analysis extends LogSupport {
                 }
                 analysis.finish(true)
               } catch {
+                case x: SkipThisApp =>
+                  info("got order to skip")
+                  analysis.addEncounteredError(x, None, silent = true)
+                  continue = false
+                  analysis.finish(false)
                 case x: UnableToStartApp =>
                   Experiment.addEncounteredError(x)
+                  analysis.finish(false)
                   continue = false
                 case x: StaleElementReferenceException =>
                   analysis.addEncounteredError(new StaleInterfaceElement(x),
@@ -410,11 +432,13 @@ object Analysis extends LogSupport {
                   continue = false
                 case x: WebDriverException =>
                   analysis.addEncounteredError(new WebDriverHissyFit(x), None)
+                  analysis.finish(false)
                   continue = false
               }
             } while (continue)
           } catch {
             case x: AnalysisFatal =>
+              Experiment.addEncounteredError(x)
               error(x.getMessage)
             case x: UnableToInstallApp =>
               Experiment.addEncounteredError(x)

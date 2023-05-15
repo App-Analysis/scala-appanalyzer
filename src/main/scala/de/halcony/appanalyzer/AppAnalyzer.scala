@@ -7,7 +7,7 @@ import de.halcony.appanalyzer.appbinary.MobileApp
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
-import de.halcony.appanalyzer.platform.PlatformOS.{Android, AndroidEmulatorRoot, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
 import de.halcony.appanalyzer.platform.appium.Appium
 import de.halcony.appanalyzer.platform.device.{AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
@@ -197,7 +197,7 @@ object AppAnalyzer extends LogSupport {
     val manifestFilePath = s"$folderPath/manifest.json"
     val manifest = MMap(readManifestFile(manifestFilePath).toList :_*)
     val inspector = os match {
-      case Android | AndroidEmulatorRoot => APK(conf)
+      case Android => APK(conf)
       case PlatformOS.iOS => IPA(conf)
     }
     val alreadyChecked : Set[String] = if(filtering) Experiment.getAnalyzedApps.map(_.id).toSet else Set()
@@ -209,6 +209,7 @@ object AppAnalyzer extends LogSupport {
               val app = manifest.synchronized(manifest.get(path)) match {
                 case Some(app) => app
                 case None =>
+                  warn(s"app $path not contained in the manifest.json")
                   val app = appbinary.MobileApp(inspector.getAppId(appbinary.MobileApp("", "", os, path)), "NA", os, path)
                   manifest.synchronized(manifest.addOne(path -> app))
                   app
@@ -258,7 +259,7 @@ object AppAnalyzer extends LogSupport {
   private def getRelevantApps(pargs : ParsingResult, device : Device, conf : Config, filtering : Boolean = true) : List[MobileApp] = {
     val path = pargs.getValue[String]("path")
     val apps = device.PLATFORM_OS match {
-      case Android | AndroidEmulatorRoot =>
+      case Android =>
         val (apks,folder) = if(new File(path).isDirectory) {
           (new File(path).listFiles().filter(_.isFile).filter(_.getPath.endsWith(".apk")).map(_.getPath).toList,path)
         }  else {

@@ -20,8 +20,11 @@ import java.util.Base64
 trait Device extends LogSupport {
 
   private var failedInteractions: Int = 0
-  private val REBOOT_THRESHOLD: Int = 5
-  private val FATAL_ERROR_THRESHOLD: Int = 10
+  private val REBOOT_THRESHOLD: Int = 5000
+  private val FATAL_ERROR_THRESHOLD: Int = 1000
+  val EMULATOR: Boolean
+  val ROOT: Boolean
+
   protected def increaseFailedInteractions(): Unit = {
     failedInteractions = failedInteractions + 1
     if (failedInteractions == REBOOT_THRESHOLD) {
