@@ -64,6 +64,10 @@ class Analysis(description: String,
     running = value
   }
 
+  def deviceIsRooted : Boolean = synchronized {
+    device.ROOT
+  }
+
   def getRunning: Boolean = synchronized {
     running
   }

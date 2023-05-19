@@ -9,7 +9,7 @@ import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{AndroidEmulatorRoot, Device}
+import de.halcony.appanalyzer.platform.device.{AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOS, device}
 import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
@@ -47,7 +47,7 @@ object AppAnalyzer extends LogSupport {
       .addPositional("analysisIds", "csv list of ids or file containing list of ids")
       .addDefault[(ParsingResult,Config) => Unit]("func", deleteAnalysisMain))
     .addSubparser(Parser("run","run an action/analysis")
-      .addPositional("platform","the platform to be analyzed [android_device,android_emulator_root,ios]")
+      .addPositional("platform","the platform to be analyzed [android_device,android_device_non_root,android_emulator_root,ios]")
       .addPositional("path", "path to the required data for the chosen action")
       .addSubparser(Parser("functionalityCheck", "run through all fundamental API actions to check if it works")
         .addDefault[(ParsingResult, Config) => Unit]("func", functionalityCheck))
@@ -133,6 +133,7 @@ object AppAnalyzer extends LogSupport {
   private def getDevice(pargs: ParsingResult, conf: Config): Device = {
     pargs.getValue[String]("platform") match {
       case "android_device" => device.AndroidDevice(conf)
+      case "android_device_non_root" => new AndroidDeviceNonRoot(conf)
       case "android_emulator_root" => new AndroidEmulatorRoot(conf)
       case "ios" => device.iOSDevice(conf)
       case x =>

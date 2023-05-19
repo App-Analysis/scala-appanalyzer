@@ -5,7 +5,7 @@ import de.halcony.appanalyzer.platform.exceptions.FatalError
 
 import scala.sys.process._
 
-class AndroidNonRoot(conf: Config) extends AndroidDevice(conf) {
+class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
 
   override val PLATFORM_OS: PlatformOS = Android
   override val EMULATOR: Boolean = false
