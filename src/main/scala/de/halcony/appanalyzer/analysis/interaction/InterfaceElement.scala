@@ -12,6 +12,8 @@ class InterfaceElement(element: WebElement) {
 
   def getText: String = text
 
+  def sendKeys(s: String): Unit = element.sendKeys(s)
+
   def click(): Unit = element.click()
 
   def getUnderlyingElement: WebElement = element
