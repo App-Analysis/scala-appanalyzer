@@ -18,4 +18,9 @@ class InterfaceElement(element: WebElement) {
 
   def getUnderlyingElement: WebElement = element
 
+  def getElementType: String = try {
+    element.getAttribute("className")
+  } catch {
+    case _: Throwable => element.getAttribute("type")
+  }
 }
