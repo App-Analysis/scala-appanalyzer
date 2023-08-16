@@ -72,8 +72,6 @@ class Analysis(description: String,
     stop = true
   }
 
-  def getAppId: String = app.id
-
   def checkStop(): Unit = synchronized {
     if (stop) {
       throw new AnalysisTookTooLong()
