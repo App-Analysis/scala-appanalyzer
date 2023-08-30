@@ -36,7 +36,7 @@ class AndroidAppium(conf: Config) extends Appium with LogSupport {
     capabilities.setCapability("appWaitActivity", "*")
     capabilities.setCapability("newCommandTimeout", 450) // this means it takes 5 minutes before appium quits
     val driver = new AndroidDriver(
-      new URL(s"http://${this.getServer}:${this.getPort}/wd/hub"),
+      new URL(s"http://${this.getServer}:${this.getPort}"),
       capabilities)
     driver.getBatteryInfo.getState.toString // cargo cult to ensure that appium has started
     this.driver = Some(driver)
