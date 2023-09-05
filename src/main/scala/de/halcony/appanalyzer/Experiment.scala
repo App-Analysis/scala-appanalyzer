@@ -18,11 +18,9 @@ object Experiment extends LogSupport {
     * @param silent whether or not to print an error log
     * @param stackTrace whether or not the error log should also print the stacktrace
     */
-  def addEncounteredError(
-      x: Throwable,
-      silent: Boolean = false,
-      stackTrace: Boolean = true
-  ): Unit = {
+  def addEncounteredError(x: Throwable,
+                          silent: Boolean = false,
+                          stackTrace: Boolean = true): Unit = {
     if (!silent) error(x.getClass.toString + " " + x.getMessage)
     if (!silent && stackTrace) error(x.getStackTrace.mkString("\n"))
     Postgres.withDatabaseSession { implicit session =>
@@ -57,8 +55,7 @@ object Experiment extends LogSupport {
       case x: Throwable =>
         addEncounteredError(x)
         throw new FatalError(
-          "we encountered an exception on the experiment layer - this is fatal"
-        )
+          "we encountered an exception on the experiment layer - this is fatal")
     }
   }
 
@@ -111,12 +108,12 @@ object Experiment extends LogSupport {
   def getCurrentExperiment: Experiment = {
     currentExperiment.getOrElse(
       throw new RuntimeException(
-        "there is no current experiment, load or create a new one first"
-      )
-    )
+        "there is no current experiment, load or create a new one first"))
   }
 
-  /** @return a list of all app already having been analyzed in some form
+  /**
+    *
+    * @return a list of all app already having been analyzed in some form
     */
   def getAnalyzedApps: List[MobileApp] = {
     assert(this.currentExperiment.nonEmpty)
@@ -132,12 +129,10 @@ object Experiment extends LogSupport {
             WHERE
                  experiment = $experimentId"""
         .map { row =>
-          appbinary.MobileApp(
-            row.string("app_id"),
-            row.string("app_version"),
-            MobileApp.stringToOsEnum(row.string("app_os")),
-            "N/A"
-          )
+          appbinary.MobileApp(row.string("app_id"),
+                              row.string("app_version"),
+                              MobileApp.stringToOsEnum(row.string("app_os")),
+                              "N/A")
         }
         .toList
         .apply()
@@ -145,6 +140,7 @@ object Experiment extends LogSupport {
   }
 
   /** delete the current experiment content from the experiment
+    *
     */
   def deleteCurrentExperiment(): Unit = {
     debug("deleting experiment")

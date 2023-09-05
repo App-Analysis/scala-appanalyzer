@@ -7,13 +7,11 @@ import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 
 import scala.sys.process.{Process, ProcessLogger}
 
-class TrafficCollection(
-    analysis: Int,
-    interface: Option[Int],
-    comment: String,
-    conf: Config,
-    dumb: Boolean = false
-) {
+class TrafficCollection(analysis: Int,
+                        interface: Option[Int],
+                        comment: String,
+                        conf: Config,
+                        dumb: Boolean = false) {
 
   private var id: Option[Int] = None
   private var mitmproxy: Option[Process] = None
@@ -31,8 +29,7 @@ class TrafficCollection(
         "POSTGRES_DB" -> conf.db.name,
         "POSTGRES_USER" -> conf.db.user,
         "POSTGRES_PASSWORD" -> conf.db.pwd
-      ).run(ProcessLogger(_ => ()))
-    )
+      ).run(ProcessLogger(_ => ())))
   }
 
   private def stopMitmProxy(): Unit = {
@@ -64,8 +61,7 @@ class TrafficCollection(
   protected def startDumbProxy(): Unit = {
     mitmproxy = Some(
       Process(s"${conf.mitm.path} --mode transparent --allow-hosts mitm.it")
-        .run(ProcessLogger(_ => (), _ => ()))
-    )
+        .run(ProcessLogger(_ => (), _ => ())))
   }
 
   protected def start(): Unit = {
@@ -96,25 +92,20 @@ object TrafficCollection {
 
   private var activeTrafficCollection: Option[TrafficCollection] = None
 
-  def startNewTrafficCollection(
-      analysis: Int,
-      interface: Option[Int],
-      comment: String,
-      conf: Config
-  ): TrafficCollection = {
+  def startNewTrafficCollection(analysis: Int,
+                                interface: Option[Int],
+                                comment: String,
+                                conf: Config): TrafficCollection = {
     activeTrafficCollection match {
       case Some(_) =>
         throw new FatalError("there is already a traffic collection running")
       case None =>
         activeTrafficCollection = Some(
-          new TrafficCollection(
-            analysis,
-            interface,
-            comment,
-            conf,
-            dumb = false
-          )
-        )
+          new TrafficCollection(analysis,
+                                interface,
+                                comment,
+                                conf,
+                                dumb = false))
         activeTrafficCollection.get.start()
         activeTrafficCollection.get
     }
@@ -126,8 +117,7 @@ object TrafficCollection {
         throw new FatalError("there is already a traffic collection running")
       case None =>
         activeTrafficCollection = Some(
-          new TrafficCollection(-1, null, "dumb", conf, dumb = true)
-        )
+          new TrafficCollection(-1, null, "dumb", conf, dumb = true))
         activeTrafficCollection.get.start()
         activeTrafficCollection.get
     }

@@ -12,8 +12,7 @@ import scala.sys.process._
 case class IPA(conf: Config) extends Analysis {
 
   override def getIncludedFiles(path: String): List[String] = {
-    val zipinfo =
-      "zipinfo" //for now we are assuming this is installed - if this bites you later on ... well ...
+    val zipinfo = "zipinfo" //for now we are assuming this is installed - if this bites you later on ... well ...
     val data = s"$zipinfo -l $path".!!
     data
       .split("\n")
@@ -23,9 +22,8 @@ case class IPA(conf: Config) extends Analysis {
       .toList
   }
 
-  private def using[T <: { def close(): Unit }, U](
-      resource: T
-  )(block: T => U): U = {
+  private def using[T <: { def close(): Unit }, U](resource: T)(
+      block: T => U): U = {
     try {
       block(resource)
     } finally {
@@ -50,8 +48,7 @@ case class IPA(conf: Config) extends Analysis {
           res.value("softwareVersionBundleId").asInstanceOf[MetaString].value
         case None =>
           throw new RuntimeException(
-            s"file ${app.path} does not have an iTunesMetaData.plist"
-          )
+            s"file ${app.path} does not have an iTunesMetaData.plist")
       }
     }
   }

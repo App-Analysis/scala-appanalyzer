@@ -9,40 +9,32 @@ import spray.json.{DefaultJsonProtocol, JsonParser, RootJsonFormat}
 
 import scala.io.Source
 
-case class DevicePreparation(
-    clipboard: String,
-    latitude: Double,
-    longitude: Double,
-    altitude: Double
-)
+case class DevicePreparation(clipboard: String,
+                             latitude: Double,
+                             longitude: Double,
+                             altitude: Double)
 
-case class AndroidAnalysis(
-    dexdump: String,
-    apkanalyzer: String,
-    adb: String,
-    objection: String,
-    osVersion: String
-)
+case class AndroidAnalysis(dexdump: String,
+                           apkanalyzer: String,
+                           adb: String,
+                           objection: String,
+                           osVersion: String)
 
-case class iOSPermissionPopup(
-    interaction: String,
-    text: List[String],
-    allowButton: List[String],
-    dontAllowButton: List[String]
-)
+case class iOSPermissionPopup(interaction: String,
+                              text: List[String],
+                              allowButton: List[String],
+                              dontAllowButton: List[String])
 
-case class iOS(
-    rootpwd: String,
-    ip: String,
-    ideviceinstaller: String,
-    ideviceinfo: String,
-    fridaps: String,
-    deviceName: String,
-    xcodeOrgId: String,
-    osv: String,
-    xcodeSigningId: String,
-    permissionPopup: iOSPermissionPopup
-) {
+case class iOS(rootpwd: String,
+               ip: String,
+               ideviceinstaller: String,
+               ideviceinfo: String,
+               fridaps: String,
+               deviceName: String,
+               xcodeOrgId: String,
+               osv: String,
+               xcodeSigningId: String,
+               permissionPopup: iOSPermissionPopup) {
 
   def getXcodeOrgId: String = {
     val source: Source = Source.fromFile(xcodeOrgId)
@@ -56,35 +48,30 @@ case class iOS(
 
 case class Mitmproxy(path: String, addonScript: String)
 
-case class Database(
-    host: String,
-    port: Int,
-    name: String,
-    user: String,
-    pwd: String
-)
+case class Database(host: String,
+                    port: Int,
+                    name: String,
+                    user: String,
+                    pwd: String)
 
-case class Emulator(
-    emulator: String,
-    avd: String,
-    snapshot: Option[String],
-    proxyIP: Option[String],
-    proxyPort: Option[String]
-)
+case class Emulator(emulator: String,
+                    avd: String,
+                    snapshot: Option[String],
+                    proxyIP: Option[String],
+                    proxyPort: Option[String])
 
-case class Config(
-    timeoutMilli: Long,
-    verbose: Boolean,
-    appium: String,
-    tmpFolder: String,
-    mitm: Mitmproxy,
-    plugin: PluginManagerConfiguration,
-    db: Database,
-    devicePrep: DevicePreparation,
-    emulator: Option[Emulator],
-    android: AndroidAnalysis,
-    ios: iOS
-) extends HasPluginManagerConfiguration {
+case class Config(timeoutMilli: Long,
+                  verbose: Boolean,
+                  appium: String,
+                  tmpFolder: String,
+                  mitm: Mitmproxy,
+                  plugin: PluginManagerConfiguration,
+                  db: Database,
+                  devicePrep: DevicePreparation,
+                  emulator: Option[Emulator],
+                  android: AndroidAnalysis,
+                  ios: iOS)
+    extends HasPluginManagerConfiguration {
 
   override def getPluginManagerConfiguration: PluginManagerConfiguration =
     plugin
@@ -94,8 +81,7 @@ case class Config(
 object Config extends DefaultJsonProtocol {
 
   implicit val mitmproxyFormat: RootJsonFormat[Mitmproxy] = jsonFormat2(
-    Mitmproxy
-  )
+    Mitmproxy)
 
   implicit val databaseFormat: RootJsonFormat[Database] = jsonFormat5(Database)
 
@@ -114,7 +100,7 @@ object Config extends DefaultJsonProtocol {
     jsonFormat2(RemotePluginConfig)
 
   implicit val pluginManagerConfigurationFormat
-      : RootJsonFormat[PluginManagerConfiguration] =
+    : RootJsonFormat[PluginManagerConfiguration] =
     jsonFormat2(PluginManagerConfiguration)
 
   implicit val emulatorFormat: RootJsonFormat[Emulator] =
