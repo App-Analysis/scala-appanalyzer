@@ -14,8 +14,9 @@ object iTunesMetaDataParser {
     val map = xml.child
       .grouped(2)
       .map { pair =>
-        (parseKey(pair.head.asInstanceOf[Elem]) -> parseElement(
-          pair(1).asInstanceOf[Elem]))
+        parseKey(pair.head.asInstanceOf[Elem]) -> parseElement(
+          pair(1).asInstanceOf[Elem]
+        )
       }
       .toMap
     MetaDict(map)

@@ -27,7 +27,6 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     *
     * 1  generic failure
     * 20  means that a service has not been found (i.e., settings, package) - restart is required
-    *
     */
   override val PLATFORM_OS: PlatformOS = Android
   override val EMULATOR: Boolean = false
@@ -37,10 +36,10 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   private var packageAnalysis: Option[Analysis] = None
 
   private var runningFrida
-    : Option[(Process, ListBuffer[String], ListBuffer[String])] = None
+      : Option[(Process, ListBuffer[String], ListBuffer[String])] = None
 
   override def startDevice()
-    : Unit = {} // the smartphone is supposed to be already on
+      : Unit = {} // the smartphone is supposed to be already on
 
   private def detectRunningFrida(): Option[String] = {
     val cmd = s"${conf.android.adb} shell 'ps -e | grep frida-server'"
@@ -56,7 +55,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           //this is not as good it means there is a frida-server running
           assert(
             some.length == 9,
-            s"the encountered ps -e line is out of spec ${some.mkString("#")}")
+            s"the encountered ps -e line is out of spec ${some.mkString("#")}"
+          )
           Some(some.tail.head)
       }
     } catch {
@@ -90,7 +90,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       detectRunningFrida() match {
         case Some(pid) =>
           warn(
-            s"we encountered a still running frida instance as pid $pid, lets get killin'")
+            s"we encountered a still running frida instance as pid $pid, lets get killin'"
+          )
           killProcess(pid)
         case None =>
       }
@@ -98,10 +99,13 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       val stderr = ListBuffer[String]()
       val process =
         Process(
-          s"${conf.android.adb} shell 'su -c /data/local/tmp/frida-server'")
+          s"${conf.android.adb} shell 'su -c /data/local/tmp/frida-server'"
+        )
           .run(ProcessLogger(in => stdin.append(in), err => stderr.append(err)))
       runningFrida = Some((process, stdin, stderr))
-      Thread.sleep(2000) // this ensures that if frida dies on startup we can see/catch it
+      Thread.sleep(
+        2000
+      ) // this ensures that if frida dies on startup we can see/catch it
       if (!process.isAlive()) {
         increaseFailedInteractions()
         runningFrida = None
@@ -201,17 +205,26 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     while (!checkBootState() && counter < 10) { // a more dynamic reboot procedure
       Thread.sleep(30000)
       counter = counter + 1
-      if (counter % 4 == 0) //if after 2 minutes the phone did not appear we should restart adb locally
+      if (
+        counter % 4 == 0
+      ) //if after 2 minutes the phone did not appear we should restart adb locally
         restartAdb()
     }
-    if (!checkBootState()) //if we are still not booted something horrible happened which is also fatal
+    if (
+      !checkBootState()
+    ) //if we are still not booted something horrible happened which is also fatal
       throw new FatalError(
-        "we were unable to successfully restart the phone ... sucks mate")
+        "we were unable to successfully restart the phone ... sucks mate"
+      )
     s"${conf.android.adb} shell input keyevent 82".! // this unlocks the phone
     Thread.sleep(1000)
-    performTouch(1000, 800) // those are magic numbers working for Galaxy A13 to remove the notification of storage access
+    performTouch(
+      1000,
+      800
+    ) // those are magic numbers working for Galaxy A13 to remove the notification of storage access
     info(
-      "we unlocked the phone, now we wait for another 2 minutes for everything to boot up")
+      "we unlocked the phone, now we wait for another 2 minutes for everything to boot up"
+    )
     Thread.sleep(120000)
     if (fridaWasRunning)
       startFrida()
@@ -224,7 +237,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       case x: Throwable =>
         increaseFailedInteractions()
         throw new FatalError(
-          s"restarting the phone resulted in ${x.getMessage}")
+          s"restarting the phone resulted in ${x.getMessage}"
+        )
     }
     ensureDevice()
     true
@@ -247,7 +261,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       throw UnableToInstallApp(
         app,
         s"ret value of install was $ret\nSTDIO\n${stdio
-          .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
+          .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
+      )
     }
   }
 
@@ -275,18 +290,21 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
         uninstallProcess.exitValue()
       }
       try {
-        ret = Await.result(uninstallFuture,
-                           Duration(UNINSTALL_TIMEOUT_MS, MILLISECONDS))
+        ret = Await.result(
+          uninstallFuture,
+          Duration(UNINSTALL_TIMEOUT_MS, MILLISECONDS)
+        )
         if (ret == 0) {
           success = true
         } else if (ret == 20 || ret == 224) {
           warn(
-            "we encountered ret code 20 or 224 which indicates that a phone restart is required")
+            "we encountered ret code 20 or 224 which indicates that a phone restart is required"
+          )
           increaseFailedInteractions()
           restartPhone()
         } else {
-          warn(s"adb uninstall returned $ret retrying \nSTDIO\n${stdio.mkString(
-            "\n")}\nSTDERR\n${stderr.mkString("\n")}")
+          warn(s"adb uninstall returned $ret retrying \nSTDIO\n${stdio
+            .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
           increaseFailedInteractions()
           success = false
           if (!getInstalledApps.contains(appId)) {
@@ -301,7 +319,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           throw UnableToUninstallApp(
             MobileApp(appId, "NA", Android, "NA"),
             s"adb returned $ret\n${x.getMessage}\nSTDIO\n${stdio
-              .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
+              .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
+          )
       }
     }
     ret match {
@@ -310,7 +329,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
         error(s"final adb uninstall try resulted in ret code $x")
         throw UnableToUninstallApp(
           MobileApp(appId, "NA", Android, "NA"),
-          s"adb returned $ret\nSTDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
+          s"adb returned $ret\nSTDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
+        )
     }
   }
 
@@ -329,7 +349,9 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       val process = Process(cmd)
       objection = Some(
         process.run(
-          ProcessLogger(io => stdio.append(io), err => stderr.append(err))))
+          ProcessLogger(io => stdio.append(io), err => stderr.append(err))
+        )
+      )
       Thread.sleep(10000) // we give each app 10 seconds to start
       if (objection.get.isAlive()) {
         val fgid = getForegroundAppId.getOrElse(throw AppClosedItself(appId))
@@ -352,7 +374,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       // we do not need to increase failed interactions as this has already been done in the loop
       throw UnableToStartApp(
         appId,
-        s"STDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
+        s"STDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
+      )
     } else {
       // only successfully starting an app counts as a failure reset
       resetFailedInteractions()
@@ -377,7 +400,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       .foreach { permission =>
         try {
           s"${conf.android.adb} shell pm grant $appId $permission" ! ProcessLogger(
-            _ => ())
+            _ => ()
+          )
         } catch {
           case _: Throwable =>
         }
@@ -391,8 +415,11 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
         "A=[0-9]+:(.+?) U=".r.findFirstIn(value) match {
           case Some(value) =>
             Some(
-              value.substring("A=[0-9]+:".r.findFirstIn(value).get.length,
-                              value.length - " U=".length))
+              value.substring(
+                "A=[0-9]+:".r.findFirstIn(value).get.length,
+                value.length - " U=".length
+              )
+            )
           case None => None
         }
       case None => None

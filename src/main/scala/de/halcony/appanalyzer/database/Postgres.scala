@@ -13,7 +13,8 @@ object Postgres {
       val settings: ConnectionPoolSettings = ConnectionPoolSettings(
         initialSize = 10,
         maxSize = 10,
-        driverName = "org.postgresql.Driver")
+        driverName = "org.postgresql.Driver"
+      )
       val url =
         s"jdbc:postgresql://${conf.db.host}:${conf.db.port}/${conf.db.name}"
       ConnectionPool.add(POOL_NAME, url, conf.db.user, conf.db.pwd, settings)
@@ -30,7 +31,8 @@ object Postgres {
       }
     } else {
       throw new RuntimeException(
-        "there is no postgres connection pool, initialize first")
+        "there is no postgres connection pool, initialize first"
+      )
     }
   }
 

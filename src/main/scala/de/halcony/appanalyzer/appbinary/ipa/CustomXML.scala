@@ -7,8 +7,10 @@ import scala.xml.{Elem, SAXParser}
 object CustomXML extends XMLLoader[Elem] {
   override def parser: SAXParser = {
     val factory = SAXParserFactory.newInstance()
-    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",
-                       false)
+    factory.setFeature(
+      "http://apache.org/xml/features/disallow-doctype-decl",
+      false
+    )
     factory.newSAXParser()
   }
 }

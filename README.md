@@ -23,31 +23,33 @@ You might have to install atob as well via ```npm i -g atob```.
 CommandLine tools can be installed in Android Studio under ```Settings -> SDK -> SDK Tools```.
 It is recommended to add the cli-tools, platform-tools and emulator to your path configuration for easier use.
 This is done by adding
+
 ```
 export PATH="$PATH:~/Android/Sdk/platform-tools"
 export PATH="$PATH:~/Android/Sdk/emulator"
 export PATH="$PATH:~/Android/Sdk/cmdline-tools/latest/bin"
 ```
+
 to either your ```.bashrc``` or ```.profile```.
 You also have to export your ```ANDROID_HOME``` pointing to your SDK installation.
 This can be done via ```export ANDROID_HOME="~/Android/Sdk"```.
 
 ## Android Virtual Devices or Emulator
 
-If you are working with an emulated device make sure that you have sudo rights before continuing. 
+If you are working with an emulated device make sure that you have sudo rights before continuing.
 For AVDs (the Android Studio Emulator) you can use [rootAVD](https://github.com/newbit1/rootAVD).
 
 ## Appium
 
-Make sure to install the correct driver for your device type. 
+Make sure to install the correct driver for your device type.
 I.e. ```UIAutomator2``` for Android via ```appium driver install uiautomator2```.
 
 ## Installing frida
 
-After deciding what medium you want to inject with code, you will have to get the correct release for your 
+After deciding what medium you want to inject with code, you will have to get the correct release for your
 CLI version from here ```https://github.com/frida/frida/releases```.
 Make sure to use the correct version for your mediums os (i.e. older AVDs use just x86 and not x86_64).
-Then push the file to your medium, change the access rights to executable and verify 
+Then push the file to your medium, change the access rights to executable and verify
 it can run with ```./frida-server &```.
 
 ### Example for Android and AVD
@@ -57,7 +59,9 @@ adb push /path/to/frida-server-android /data/local/tmp/frida-server
 adb shell chmod 755 /data/local/tmp/frida-server
 adb shell /data/local/tmp/frida-server &
 ```
+
 or for a rooted AVD
+
 ```
 adb push /path/to/frida-server-android /data/local/tmp/frida-server
 adb shell 'su -c chmod 755 /data/local/tmp/frida-server'
@@ -67,12 +71,14 @@ adb shell 'su -c /data/local/tmp/frida-server &'
 ## Setting up the MITM proxy
 
 First start by adding the dependencies for the mitmproxy script:
+
 ```
 npm i -g dotenv
 pip3 install psycopg2
 ```
 
 if you are working with an Android device also add objection:
+
 ```
 pip3 install objection
 ```
@@ -87,8 +93,9 @@ Then import the sql schema provided under ```resources/schema.sql```.
 ### For physical devices
 
 It is recommended to set a static IP for the proxy machine as well as the phone.
-When using [OpenWRT](https://reedmideke.github.io/networking/2021/01/04/mitmproxy-openwrt.html) the following 
+When using [OpenWRT](https://reedmideke.github.io/networking/2021/01/04/mitmproxy-openwrt.html) the following
 commands have to be executed on the used OpenWRT WLAN router:
+
 ```
 # create a routing rule entry with ID 101 (must be unique)
 echo 101 mitmproxy >> /etc/iproute2/rt_tables
@@ -112,7 +119,9 @@ iptables -t mangle -I PREROUTING -j mitmproxy
 # deactivating the rules (after experiment)
 iptables -t mangle -D PREROUTING 1
 ```
+
 The below commands have to be set on the proxy host. This stuff should be ephemeral and not persist after a reboot.
+
 ```
 # deactivate redirects
 sysctl -w net.ipv4.conf.all.send_redirects=0
@@ -122,7 +131,8 @@ sysctl -w net.ipv4.ip_forward=1
 iptables -t nat -I PREROUTING -i <wlan device> -p tcp --dport 80 -j REDIRECT --to-port 8080
 iptables -t nat -I PREROUTING -i <wlan device> -p tcp --dport 443 -j REDIRECT --to-port 8080
 ```
-**DISCLAIMER**: Always test those configurations prior to running your experiments. 
+
+**DISCLAIMER**: Always test those configurations prior to running your experiments.
 Running mitmproxy and checking if simply using the phone browser shows any requests suffices.
 
 ## AppAnalzyer Config

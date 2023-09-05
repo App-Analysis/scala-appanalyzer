@@ -8,7 +8,7 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.{By, WebElement}
 import wvlet.log.LogSupport
 
-import java.net.URL
+import java.net.URI
 import java.util
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
@@ -43,7 +43,8 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
           .asScala
           .toList
           .find(elem =>
-            ALERT_TEXT_REGEXP.exists(regexp => regexp.matches(elem.getText)))
+            ALERT_TEXT_REGEXP.exists(regexp => regexp.matches(elem.getText))
+          )
       alert match {
         case Some(alertElement) =>
           continue = true
@@ -54,13 +55,18 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
             .toList
           val allow = buttons.filter(button =>
             ALLOW_BUTTON_TEXT.exists(regexp =>
-              regexp.matches(button.getText.toLowerCase.trim)))
+              regexp.matches(button.getText.toLowerCase.trim)
+            )
+          )
           val disallow = buttons.filter(button =>
             DISALLOW_BUTTON_TEXT.exists(regexp =>
-              regexp.matches(button.getText.toLowerCase.trim)))
+              regexp.matches(button.getText.toLowerCase.trim)
+            )
+          )
           if (!(allow.length == 1 && disallow.length == 1)) {
             throw new FatalError(
-              s"found alert but ${allow.length} allow buttons and ${disallow.length} disallow buttons")
+              s"found alert but ${allow.length} allow buttons and ${disallow.length} disallow buttons"
+            )
           } else {
             conf.ios.permissionPopup.interaction match {
               case "allow" =>
@@ -94,7 +100,9 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
     var gotRid: Boolean = false
     alert.forEach { alertElement =>
       val alertElementText = alertElement.getText.toLowerCase.trim
-      if (ALERT_TEXT_REGEXP.exists(regexp => regexp.matches(alertElementText))) {
+      if (
+        ALERT_TEXT_REGEXP.exists(regexp => regexp.matches(alertElementText))
+      ) {
         info("we detected an alert box matching our config")
         val buttons = alertElement
           .findElements(By.className("XCUIElementTypeButton"))
@@ -102,13 +110,18 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
           .toList
         val allow = buttons.filter(button =>
           ALLOW_BUTTON_TEXT.exists(regexp =>
-            regexp.matches(button.getText.toLowerCase.trim)))
+            regexp.matches(button.getText.toLowerCase.trim)
+          )
+        )
         val disallow = buttons.filter(button =>
           DISALLOW_BUTTON_TEXT.exists(regexp =>
-            regexp.matches(button.getText.toLowerCase.trim)))
+            regexp.matches(button.getText.toLowerCase.trim)
+          )
+        )
         if (!(allow.length == 1 && disallow.length == 1)) {
           throw new FatalError(
-            s"found alert but ${allow.length} allow buttons and ${disallow.length} disallow buttons")
+            s"found alert but ${allow.length} allow buttons and ${disallow.length} disallow buttons"
+          )
         }
         conf.ios.permissionPopup.interaction match {
           case "allow" =>
@@ -141,10 +154,16 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
     capabilities.setCapability("appium:autoLaunch", false)
     capabilities.setCapability("appium:noReset", true) //no idea what
     capabilities.setCapability("appium:fullReset", false) //those are doing
-    capabilities.setCapability("appium:waitForIdleTimeout", 2) // reduce idling time requirement
-    capabilities.setCapability("newCommandTimeout", 450) // this means it takes 5 minutes before appium quits
+    capabilities.setCapability(
+      "appium:waitForIdleTimeout",
+      2
+    ) // reduce idling time requirement
+    capabilities.setCapability(
+      "newCommandTimeout",
+      450
+    ) // this means it takes 5 minutes before appium quits
     val driver = new IOSDriver(
-      new URL(s"http://${this.getServer}:${this.getPort}/"),
+      new URI(s"http://${this.getServer}:${this.getPort}/").toURL,
       capabilities
     )
     driver.getBatteryInfo.getState.toString // cargo cult to ensure that appium has started

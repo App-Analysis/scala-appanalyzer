@@ -32,14 +32,18 @@ trait Device extends LogSupport {
       if (checkBootState()) {
         restartPhone()
       } else {
-        Thread.sleep(120000) // no phone boot up should lake longer than 2 minutes
+        Thread.sleep(
+          120000
+        ) // no phone boot up should lake longer than 2 minutes
         restartPhone()
       }
     } else if (failedInteractions >= FATAL_ERROR_THRESHOLD) {
       error(
-        s"we reached $failedInteractions which passed the fatal threshold ... now I will die")
+        s"we reached $failedInteractions which passed the fatal threshold ... now I will die"
+      )
       throw new FatalError(
-        s"we reached $failedInteractions which passed the fatal threshold ... now I will die")
+        s"we reached $failedInteractions which passed the fatal threshold ... now I will die"
+      )
     }
   }
 
@@ -114,15 +118,18 @@ trait Device extends LogSupport {
     import HandyJsonReader._
     val cmd =
       s"node $PATH_TO_FRIDA_SCRIPT $pid ${Base64.getEncoder.encodeToString(script.getBytes)}"
-    val res = try {
-      cmd.!!
-    } catch {
-      case x: RuntimeException =>
-        error(s"running frida script resulted in error: ${x.getMessage}")
-        JsObject(
-          "error" -> JsString(
-            s"ERROR:\n${x.getMessage}\n${x.getStackTrace.mkString("\n")}")).prettyPrint
-    }
+    val res =
+      try {
+        cmd.!!
+      } catch {
+        case x: RuntimeException =>
+          error(s"running frida script resulted in error: ${x.getMessage}")
+          JsObject(
+            "error" -> JsString(
+              s"ERROR:\n${x.getMessage}\n${x.getStackTrace.mkString("\n")}"
+            )
+          ).prettyPrint
+      }
     try {
       JsonParser(ParserInput(res)).convertTo[Result].result
     } catch {

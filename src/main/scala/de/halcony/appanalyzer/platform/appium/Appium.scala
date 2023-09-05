@@ -39,7 +39,6 @@ trait Appium extends LogSupport {
   }
 
   /** stops any running appium server instance
-    *
     */
   private def stopAppiumServer(): Unit = {
     appiumProcess match {
@@ -49,12 +48,10 @@ trait Appium extends LogSupport {
   }
 
   /** connect the driver
-    *
     */
   protected def connect(appId: String): Unit
 
   /** stop any running appium driver connection
-    *
     */
   protected def stop(): Unit = {
     driver match {
@@ -63,7 +60,8 @@ trait Appium extends LogSupport {
           .quit() //if the appium server already stopped this will not terminate
       case None =>
         warn(
-          "driver has not been created, could be due to an error being thrown just before creation")
+          "driver has not been created, could be due to an error being thrown just before creation"
+        )
     }
   }
 
@@ -91,7 +89,8 @@ trait Appium extends LogSupport {
         this.driver
           .getOrElse(throw new RuntimeException("appium is not connected"))
           .getScreenshotAs(OutputType.BASE64)
-          .replaceAll("\n", ""))
+          .replaceAll("\n", "")
+      )
       val inputStream = new ByteArrayInputStream(bytes)
       val image: BufferedImage = ImageIO.read(inputStream)
       Some(image)
@@ -101,7 +100,8 @@ trait Appium extends LogSupport {
         None
       case x: Throwable =>
         error(
-          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}")
+          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}"
+        )
         None
     }
   }
@@ -116,7 +116,8 @@ trait Appium extends LogSupport {
       val bytes: Array[Byte] = Base64.getDecoder.decode(
         element
           .getScreenshotAs(OutputType.BASE64)
-          .replaceAll("\n", ""))
+          .replaceAll("\n", "")
+      )
       val inputStream = new ByteArrayInputStream(bytes)
       val image: BufferedImage = ImageIO.read(inputStream)
       Some(image)
@@ -126,7 +127,8 @@ trait Appium extends LogSupport {
         None
       case x: Throwable =>
         error(
-          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}")
+          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}"
+        )
         None
     }
   }
@@ -150,7 +152,8 @@ object Appium extends LogSupport {
     * @return the return value of the function func
     */
   def withRunningAppium[T](appId: String, conf: Config, device: Device)(
-      func: Appium => T): T = {
+      func: Appium => T
+  ): T = {
     val appium: Appium = device.PLATFORM_OS match {
       case PlatformOS.Android =>
         new AndroidAppium(conf)

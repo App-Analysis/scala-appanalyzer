@@ -20,7 +20,6 @@ case class MobileApp(id: String, version: String, os: PlatformOS, path: String)
   }
 
   /** insert the app into the connected database
-    *
     */
   def insert(): Unit = {
     Postgres.withDatabaseSession { implicit session =>

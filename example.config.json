@@ -1,63 +1,77 @@
 {
-  "timeoutMilli" : 900000,
-  "verbose" : false,
-  "appium" : "appium",
-  "tmpFolder" : "/tmp/folder/",
-  "mitm" : {
-    "path" : "mitmdump",
-    "addonScript" : "./resources/trafficCollection/mitm-addon.py"
+  "timeoutMilli": 900000,
+  "verbose": false,
+  "appium": "appium",
+  "tmpFolder": "/tmp/folder/",
+  "mitm": {
+    "path": "mitmdump",
+    "addonScript": "./resources/trafficCollection/mitm-addon.py"
   },
-  "plugin" : {
-    "folder" : "./plugins/",
-      "available" : {
-        "TrafficCollection": {
-          "owner": "simkoc",
-          "repo": "appanalyzer-plugin-trafficcollection"
-        }
+  "plugin": {
+    "folder": "./plugins/",
+    "available": {
+      "TrafficCollection": {
+        "owner": "simkoc",
+        "repo": "appanalyzer-plugin-trafficcollection"
       }
+    }
   },
-  "emulator" : {
-    "emulator" : "/path/to/emulator",
-    "avd" : "name-of-avd",
-    "snapshot" : "thesnapshottouseifset",
-    "proxyIP" : "theipoftheproxyifset",
-    "proxyPort" : "theportoftheproxyifset"
+  "emulator": {
+    "emulator": "/path/to/emulator",
+    "avd": "name-of-avd",
+    "snapshot": "thesnapshottouseifset",
+    "proxyIP": "theipoftheproxyifset",
+    "proxyPort": "theportoftheproxyifset"
   },
-  "db" : {
-    "host" : "localhost",
-    "port" : 5432,
-    "name" : "db_name",
-    "user" : "db_user",
-    "pwd"  : "db_pwd"
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "db_name",
+    "user": "db_user",
+    "pwd": "db_pwd"
   },
-  "devicePrep" : {
-    "clipboard" : "sd325fEr23q2",
-    "latitude" : 16.0000,
-    "longitude" : 17.000,
-    "altitude" : 100.000
+  "devicePrep": {
+    "clipboard": "sd325fEr23q2",
+    "latitude": 16.0000,
+    "longitude": 17.000,
+    "altitude": 100.000
   },
-  "android" : {
-    "dexdump" : "dexdump",
-    "adb" : "adb",
-    "objection" : "objection",
-    "osVersion" : "12",
-    "apkanalyzer" : "apkanalyzer"
+  "android": {
+    "dexdump": "dexdump",
+    "adb": "adb",
+    "objection": "objection",
+    "osVersion": "12",
+    "apkanalyzer": "apkanalyzer"
   },
-  "ios" : {
-    "rootpwd" : "alpine",
-    "ip" : "iPhone IP",
-    "ideviceinstaller" : "ideviceinstaller",
-    "ideviceinfo" : "ideviceinfo",
-    "fridaps" : "frida-ps",
-    "deviceName" : "Device Name",
-    "xcodeOrgId" : "xoodeOrgId",
-    "xcodeSigningId" : "iPhone Developer",
-    "osv" : "14.5",
-    "permissionPopup" : {
-      "interaction" : "deny",
-      "text" : ["would like to", "wants to join", "turn on bluetooth to allow"],
-      "allowButton" : ["allow","ok","join","settings","allow access to all photos"],
-      "dontAllowButton" : ["don.t allow", "close", "cancel"]
+  "ios": {
+    "rootpwd": "alpine",
+    "ip": "iPhone IP",
+    "ideviceinstaller": "ideviceinstaller",
+    "ideviceinfo": "ideviceinfo",
+    "fridaps": "frida-ps",
+    "deviceName": "Device Name",
+    "xcodeOrgId": "xoodeOrgId",
+    "xcodeSigningId": "iPhone Developer",
+    "osv": "14.5",
+    "permissionPopup": {
+      "interaction": "deny",
+      "text": [
+        "would like to",
+        "wants to join",
+        "turn on bluetooth to allow"
+      ],
+      "allowButton": [
+        "allow",
+        "ok",
+        "join",
+        "settings",
+        "allow access to all photos"
+      ],
+      "dontAllowButton": [
+        "don.t allow",
+        "close",
+        "cancel"
+      ]
     }
   }
 }

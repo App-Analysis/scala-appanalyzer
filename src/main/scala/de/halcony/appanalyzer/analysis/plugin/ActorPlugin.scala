@@ -26,9 +26,10 @@ trait ActorPlugin {
     * @param interface the interface on which to perform the action
     * @return the performed action and resulting interface combination
     */
-  def action(interface: Interface)(
-      implicit context: Analysis,
-      appium: Appium): Option[InterfaceElementInteraction]
+  def action(interface: Interface)(implicit
+      context: Analysis,
+      appium: Appium
+  ): Option[InterfaceElementInteraction]
 
   /** check if actor wants to run again on the same app
     *

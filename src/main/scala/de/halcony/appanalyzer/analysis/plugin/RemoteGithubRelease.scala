@@ -32,17 +32,18 @@ case class RemoteGithubRelease(json: JsObject)
     .asInstanceOf[JsString]
     .value
 
-  val major :: minor :: revision :: Nil = try {
-    json
-      .fields("name")
-      .asInstanceOf[JsString]
-      .value
-      .substring(1)
-      .split("\\.")
-      .toList
-  } catch {
-    case _: Exception => throw NoValidSemVersion
-  }
+  val major :: minor :: revision :: Nil =
+    try {
+      json
+        .fields("name")
+        .asInstanceOf[JsString]
+        .value
+        .substring(1)
+        .split("\\.")
+        .toList
+    } catch {
+      case _: Exception => throw NoValidSemVersion
+    }
 
   def getVersion = s"$major.$minor.$revision"
 

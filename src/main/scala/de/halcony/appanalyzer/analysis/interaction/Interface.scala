@@ -10,11 +10,12 @@ import wvlet.log.LogSupport
 import java.nio.charset.StandardCharsets
 import javax.imageio.ImageIO
 
-class Interface(elements: List[InterfaceElement],
-                belongsTo: Analysis,
-                appium: Appium,
-                comment: String = "")
-    extends LogSupport {
+class Interface(
+    elements: List[InterfaceElement],
+    belongsTo: Analysis,
+    appium: Appium,
+    comment: String = ""
+) extends LogSupport {
 
   def getComment: String = comment
 
@@ -33,7 +34,6 @@ class Interface(elements: List[InterfaceElement],
   /** inserting the given interface into the database
     *
     * requires the context analysis to be already inserted
-    *
     */
   def insert(): Unit = {
     info(s"inserting interface $comment")
@@ -68,7 +68,9 @@ class Interface(elements: List[InterfaceElement],
         val text = {
           val buff = element.getText
           try {
-            buff.getBytes(StandardCharsets.UTF_8) // check if we have valid UTF-8 text
+            buff.getBytes(
+              StandardCharsets.UTF_8
+            ) // check if we have valid UTF-8 text
             buff
           } catch {
             case _: Throwable =>
@@ -131,10 +133,12 @@ object Interface extends LogSupport {
     * @param comment a comment to store alongside the interface in the database
     * @return
     */
-  def apply(analysis: Analysis,
-            appium: Appium,
-            flat: Boolean = false,
-            comment: String = ""): Interface = {
+  def apply(
+      analysis: Analysis,
+      appium: Appium,
+      flat: Boolean = false,
+      comment: String = ""
+  ): Interface = {
     val elements = if (!flat) {
       appium.getAllElements
         .map { elem =>

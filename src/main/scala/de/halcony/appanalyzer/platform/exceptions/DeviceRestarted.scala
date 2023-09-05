@@ -3,7 +3,6 @@ package de.halcony.appanalyzer.platform.exceptions
 /** condition that can be thrown if a device is restarted
   *
   * CURRENTLY UNUSED
-  *
   */
 object DeviceRestarted extends Throwable {
 
