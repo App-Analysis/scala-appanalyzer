@@ -1,4 +1,4 @@
-# App Analzyer
+# AppAnalyzer
 
 The scala-appanalyzer is a tool for traffic collection for mobile applications
 for iOS, Android and AVDs (Android Emulators). It allows for plugin import
@@ -125,7 +125,7 @@ iptables -t nat -I PREROUTING -i <wlan device> -p tcp --dport 443 -j REDIRECT --
 **DISCLAIMER**: Always test those configurations prior to running your experiments. 
 Running mitmproxy and checking if simply using the phone browser shows any requests suffices.
 
-## AppAnalzyer Config
+## AppAnalyzer Config
 
 Open the example.config.json and create a config.json with your parameters derived from it.
 
