@@ -12,8 +12,15 @@ class InterfaceElement(element: WebElement) {
 
   def getText: String = text
 
+  def sendKeys(s: String): Unit = element.sendKeys(s)
+
   def click(): Unit = element.click()
 
   def getUnderlyingElement: WebElement = element
 
+  def getElementType: String = try {
+    element.getAttribute("className")
+  } catch {
+    case _: Throwable => element.getAttribute("type")
+  }
 }

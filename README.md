@@ -1,100 +1,94 @@
-# App Analyzer
+# AppAnalyzer
 
-## Requirements
+The scala-appanalyzer is a tool for traffic collection for mobile applications
+for iOS, Android and AVDs (Android Emulators). It allows for plugin import
+to enable a wide range of functions.
 
-- rooted Android device (tested Galaxy A13)
-    - or Android Emulator (not implemented yet)
-    - or iPhone
-- objection
-- frida
-- appium
-- scala
-- sbt
-- sshpass
-- zipinfo
-- cydia
-    - use cydia on the iPhone to install and run frida
-- postgres
-- mitmproxy
-- android-studio
-    - with command line tools
-      - including `apkanalyzer` which needs a java version < 10
-      - use `sudo archlinux-java set java-8-openjdk` on Arch
-    - with adb
+## "global" requirements
 
-## Installation
+| requirement                                                          | installation                 |
+|----------------------------------------------------------------------|------------------------------|
+| [python](https://www.python.org/)                                    | recommended: python3         |
+| [mitmproxy](https://mitmproxy.org/)                                  | ```pip install mitmproxy```  |
+| [node & npm](https://nodejs.org/en)                                  | recommended: node 16 & npm 8 |
+| [frida](https://frida.re/)                                           | ```npm i -g frida```         |
+| [Appium](http://appium.io/docs/en/2.0/)                              | ```npm i -g appium```        |
+| [OpenJDK](https://openjdk.org/)                                      | Java 17                      |
+| [scala](https://www.scala-lang.org/)                                 | i.e. via sbt                 |
+| [sbt](https://www.scala-sbt.org/download.html)                       | i.e. via Coursier            |
+| [Postgres](https://www.postgresql.org/)                              | via install script           |
+| [AndroidStudio with CLI-tools](https://developer.android.com/studio) | via tar                      |
 
-1. sbt stage the project
-   ```
-   sbt stage
-   ```
-2. start frida server on the target device (the current connected one)
-    - `adb shell getprop ro.product.cpu.abi` to get the device's abi
-    - grab the [latest matching release](https://github.com/frida/frida/releases/latest) for your device
-    - example on android:
-       ```
-       adb push /path/frida-server-android /data/local/tmp/frida-server
-       adb shell chmod 755 /data/local/tmp/frida-server
-       ```
-      The last command will block your terminal as frida is running 'inside' it.
-3. install appium globally
-   ```
-   npm install -g appium
-   ```
+You might have to install atob as well via ```npm i -g atob```.
+CommandLine tools can be installed in Android Studio under ```Settings -> SDK -> SDK Tools```.
+It is recommended to add the cli-tools, platform-tools and emulator to your path configuration for easier use.
+This is done by adding
+```
+export PATH="$PATH:~/Android/Sdk/platform-tools"
+export PATH="$PATH:~/Android/Sdk/emulator"
+export PATH="$PATH:~/Android/Sdk/cmdline-tools/latest/bin"
+```
+to either your ```.bashrc``` or ```.profile```.
+You also have to export your ```ANDROID_HOME``` pointing to your SDK installation.
+This can be done via ```export ANDROID_HOME="~/Android/Sdk"```.
 
-4. install frida globally
-    - be careful to match the version from frida-server used in step 2
-   ```
-   npm install -g frida
-   ```
+## Android Virtual Devices or Emulator
 
-4. install objection globally
-   ```
-   pip3 install objection
-   ```
+If you are working with an emulated device make sure that you have sudo rights before continuing. 
+For AVDs (the Android Studio Emulator) you can use [rootAVD](https://github.com/newbit1/rootAVD).
 
-5. install mitmproxy globally
-   ```
-   pip3 install mitmproxy
-   ```
+## Appium
 
-## Configuration
+Make sure to install the correct driver for your device type. 
+I.e. ```UIAutomator2``` for Android via ```appium driver install uiautomator2```.
 
-### 1. Basic
+## Installing frida
 
-- A basic `config.json` is provided. However, each path for the required tools has to be checked and, if required,
-  adapted to fit the machine.
-- You need to create a postgresql database and import the tables of the functionalities you want to leverage
-    - `./resources/basicSchema.sql` is always required
-    - do not forget to adapt the `config.json` to match the username, machine, port, database name actually configured
-      for the machine
+After deciding what medium you want to inject with code, you will have to get the correct release for your 
+CLI version from here ```https://github.com/frida/frida/releases```.
+Make sure to use the correct version for your mediums os (i.e. older AVDs use just x86 and not x86_64).
+Then push the file to your medium, change the access rights to executable and verify 
+it can run with ```./frida-server &```.
 
-#### 1.1 Useful tips we picked up
-
-- For the Samsung Galaxy A13 after rooting
-    - if your phone is annoying with a popup for carrier configuration removing the CID manager helped.
-- to check if the framework is working with your set-up, run `./aa.sh android_device run functionalityCheck`
-
-### 2. Traffic Collection
-
-1. You need to prep the Phone to use the host machine and the mitmproxy port as a
-   proxy (`~/.mitmproxy/mitmproxy-ca-cert.cer`)
-    - in case of an Android phone objection will take care of ssl (though adding the cert never hurts)
-    - in case of an iPhone you need to install the root cert of mitmproxy
-2. import the sql schema for traffic collection: `./resources/trafficCollection/trafficCollectionSchema.sql`
-3. install dependencies required by our mitmproxy script
-    - dotenv
-    - psycopg2
-4. It is highly recommended to fix the IP address for the proxy machine as well as the phone
-
-#### 2.1 OpenWRT Configuration
+### Example for Android and AVD
 
 ```
-https://reedmideke.github.io/networking/2021/01/04/mitmproxy-openwrt.html
+adb push /path/to/frida-server-android /data/local/tmp/frida-server
+adb shell chmod 755 /data/local/tmp/frida-server
+adb shell /data/local/tmp/frida-server &
+```
+or for a rooted AVD
+```
+adb push /path/to/frida-server-android /data/local/tmp/frida-server
+adb shell 'su -c chmod 755 /data/local/tmp/frida-server'
+adb shell 'su -c /data/local/tmp/frida-server &'
 ```
 
-The below commands have to be executed on the used openwrt WLAN router
+## Setting up the MITM proxy
 
+First start by adding the dependencies for the mitmproxy script:
+```
+npm i -g dotenv
+pip3 install psycopg2
+```
+
+if you are working with an Android device also add objection:
+```
+pip3 install objection
+```
+
+Under Android objection is used to disable ssl pinning thus the installation of the CA-certificate **can** be skipped.
+It is recommended to install the CA-certificate as well.
+Follow ```https://docs.mitmproxy.org/stable/concepts-certificates/``` for device specific instructions for installing
+the certificate.
+
+Then import the sql schema provided under ```resources/schema.sql```.
+
+### For physical devices
+
+It is recommended to set a static IP for the proxy machine as well as the phone.
+When using [OpenWRT](https://reedmideke.github.io/networking/2021/01/04/mitmproxy-openwrt.html) the following 
+commands have to be executed on the used OpenWRT WLAN router:
 ```
 # create a routing rule entry with ID 101 (must be unique)
 echo 101 mitmproxy >> /etc/iproute2/rt_tables
@@ -118,9 +112,7 @@ iptables -t mangle -I PREROUTING -j mitmproxy
 # deactivating the rules (after experiment)
 iptables -t mangle -D PREROUTING 1
 ```
-
 The below commands have to be set on the proxy host. This stuff should be ephemeral and not persist after a reboot.
-
 ```
 # deactivate redirects
 sysctl -w net.ipv4.conf.all.send_redirects=0
@@ -130,10 +122,60 @@ sysctl -w net.ipv4.ip_forward=1
 iptables -t nat -I PREROUTING -i <wlan device> -p tcp --dport 80 -j REDIRECT --to-port 8080
 iptables -t nat -I PREROUTING -i <wlan device> -p tcp --dport 443 -j REDIRECT --to-port 8080
 ```
+**DISCLAIMER**: Always test those configurations prior to running your experiments. 
+Running mitmproxy and checking if simply using the phone browser shows any requests suffices.
 
-**DISCLAIMER:** Always test those configurations prior to running your experiments. Running `mitmproxy` and checking
-if simply using the phone browser shows any requests suffices.
+## AppAnalyzer Config
 
-### 2.2 Consent Dialog Analysis
+Open the example.config.json and create a config.json with your parameters derived from it.
 
-- import the sql schema for consent dialog analysis: `./resources/trafficCollection/consentDialogSchema.sql`
+# Managing plugins
+
+The app analyzer uses a plugin structure, so you can easily implement missing functionality yourself.
+This chapter is about compiling and installing your own plugins.
+
+## publishing the appanalyzer locally
+
+If your plugins have trouble finding the scala-appanalyzer repository you can clone the
+repository and publish it locally such that other sbt apps can find it. To do this run
+```sbt publishLocal``` in the cloned scala-appanalyzer. Make sure your project name and
+the published version line up with the imported one.
+
+## building a plugin
+
+To build a plugin you need a file called ```[root]/project/plugin.sbt```
+and import the sbt native packager.
+
+- ```addSbtPlugin("com.github.sbt"      % "sbt-native-packager"   % "1.9.16")```
+
+You can now run ```sbt package```
+to create a JAR-file under ```[root]/target/scala-[version]/```.
+
+## installing a plugin
+
+### install a locally built plugin
+
+If you haven't compiled your package to a jar yet, please see [Building a plugin](#building-a-plugin).
+
+To install a plugin create a plugin folder. Add to your config file under ```plugin```
+the folder. You might have to rename your jar to fit the following
+naming conventions: ```plugin-[name]-[version].jar```.
+
+### install a plugin from GitHub
+
+To install a plugin from GitHub you have to add a JSON-object inside the ```available``` object.
+The object has the plugin name as key and contains owner and repository as body.
+For example:
+
+```
+"available" : {
+  "TrafficCollection": {
+    "owner": "[owner]",
+    "repo": "[repository-name]"
+  }
+}
+```
+
+## Sources of error
+
+Make sure the versions of your imports line up with the current/desired version of your application.

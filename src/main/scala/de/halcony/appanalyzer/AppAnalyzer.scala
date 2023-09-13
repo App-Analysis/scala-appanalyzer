@@ -471,10 +471,5 @@ object AppAnalyzer extends LogSupport {
       device.uninstallApp(appId)
       None
     }
-
-
-
-
   }
-
 }
