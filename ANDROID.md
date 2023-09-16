@@ -39,7 +39,11 @@ corresponding process.
 
 There are some final steps required for some measurement types.
 
-#### Traffic Interception
+#### 2. Unlock Your SIM
+
+If you have a SIM in your phone make sure to unlock it as the phone can be restarted during measurements.
+
+#### 1. Traffic Interception
 
 If you want to perform traffic interception via `mitmproxy` you need to install its certificate. To do this you have
 to follow the instructions [here](./TRAFFIC_INTERCEPTION.md) and then visit `mitm.it` in the browser of your phone.
