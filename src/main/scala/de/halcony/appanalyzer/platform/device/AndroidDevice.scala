@@ -384,7 +384,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       }
   }
 
-  override def getForegroundAppId: Option[String] = {
+  /*override def getForegroundAppId: Option[String] = {
     val cmd = s"${conf.android.adb} shell dumpsys activity recents"
     cmd.!!.split("\n").find(_.contains("Recent #0")) match {
       case Some(value) =>
@@ -396,6 +396,21 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           case None => None
         }
       case None => None
+    }
+  }*/
+
+  override def getForegroundAppId: Option[String] = {
+    val cmd = s"${conf.android.adb} shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
+    val ret = cmd.!!
+    //info(ret)
+    ret.split("\n").find(_.contains("mCurrentFocus=")) match {
+      case Some(value) =>
+        val _ :: rhs :: Nil = value.split("=").toList
+        val _ :: _ :: idAndAction :: Nil = rhs.split(" ").toList
+        Some(idAndAction.split("/").head)
+      case None =>
+        error("no current focus found")
+        None
     }
   }
 
