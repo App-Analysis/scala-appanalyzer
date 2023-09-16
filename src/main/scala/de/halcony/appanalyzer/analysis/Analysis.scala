@@ -64,7 +64,7 @@ class Analysis(description: String,
     running = value
   }
 
-  def deviceIsRooted : Boolean = synchronized {
+  def deviceIsRooted: Boolean = synchronized {
     device.ROOT
   }
 
@@ -166,8 +166,15 @@ class Analysis(description: String,
       true
     } else {
       val running = device.getForegroundAppId match {
-        case Some(value) => value == app.id
-        case None        => false
+        case Some(value) =>
+          if (value == app.id) {
+            true
+          } else {
+            error(
+              s"the foreground app is $value but we expected ${app.id} - this indicates that the app closed itself")
+            false
+          }
+        case None => false
       }
       if (!running && fail) throw AppClosedItself(app.id)
       running
