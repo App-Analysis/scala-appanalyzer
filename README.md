@@ -98,7 +98,17 @@ You can now run the appanalyzer using `aa.sh`
 1. to show all available plugins `./aa.sh plugin list available`
 2. select the plugin of interest and install via `./aa.sh plugin install <pluginNameCaseSensitive>`
 
-### For physical devices
+#### Installing a custom plugin
+
+1. create the `jar` of the corresponding plugin project
+2. move the created jar into the `plugins` folder of the `scala-appanalyzer`
+
+#### Running a Plugin
+
+**Depending on what you want to do/measure ensure that the setup for the mitm traffic interception is set up (see Traffic Interception section) as well as other technical dependencies**
+
+
+### Traffic Interception for Physical Devices using OpenWRT Router and iptables
 
 It is recommended to set a static IP for the proxy machine as well as the phone.
 When using [OpenWRT](https://reedmideke.github.io/networking/2021/01/04/mitmproxy-openwrt.html) the following 
