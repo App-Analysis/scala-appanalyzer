@@ -84,29 +84,6 @@ the certificate.
 
 Then import the sql schema provided under ```resources/schema.sql```.
 
-### Installing/Running scala-appanalzyer
-
-1. go into the git folder on the same level where the `build.sbt` resides
-2. `sbt package`
-3. `mv example.config.json config.json`
-4. `mkdir plugins`
-
-You can now run the appanalyzer using `aa.sh`
-
-#### Installing a publicly available plugin
-
-1. to show all available plugins `./aa.sh plugin list available`
-2. select the plugin of interest and install via `./aa.sh plugin install <pluginNameCaseSensitive>`
-
-#### Installing a custom plugin
-
-1. create the `jar` of the corresponding plugin project
-2. move the created jar into the `plugins` folder of the `scala-appanalyzer`
-
-#### Running a Plugin
-
-_Depending on what you want to do/measure ensure that the setup for the mitm traffic interception is set up (see Traffic Interception section) as well as other technical dependencies_
-
 
 ### Traffic Interception for Physical Devices using OpenWRT Router and iptables
 
@@ -199,6 +176,10 @@ For example:
   }
 }
 ```
+
+### Running a Plugin
+
+_Depending on what you want to do/measure ensure that the setup for the mitm traffic interception is set up (see Traffic Interception section) as well as other technical dependencies._
 
 ## Sources of error
 
