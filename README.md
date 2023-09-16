@@ -84,6 +84,12 @@ the certificate.
 
 Then import the sql schema provided under ```resources/schema.sql```.
 
+### Installing/Running scala-appanalzyer
+
+1. go into the git folder on the same level where the `build.sbt` resides
+2. `sbt package`
+3. `mv example.config.json config.json` 
+
 ### For physical devices
 
 It is recommended to set a static IP for the proxy machine as well as the phone.
