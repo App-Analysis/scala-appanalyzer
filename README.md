@@ -105,7 +105,7 @@ You can now run the appanalyzer using `aa.sh`
 
 #### Running a Plugin
 
-<font size="1">**Depending on what you want to do/measure ensure that the setup for the mitm traffic interception is set up (see Traffic Interception section) as well as other technical dependencies**</font>
+_Depending on what you want to do/measure ensure that the setup for the mitm traffic interception is set up (see Traffic Interception section) as well as other technical dependencies_
 
 
 ### Traffic Interception for Physical Devices using OpenWRT Router and iptables
