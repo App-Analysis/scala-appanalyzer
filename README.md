@@ -88,7 +88,15 @@ Then import the sql schema provided under ```resources/schema.sql```.
 
 1. go into the git folder on the same level where the `build.sbt` resides
 2. `sbt package`
-3. `mv example.config.json config.json` 
+3. `mv example.config.json config.json`
+4. `mkdir plugins`
+
+You can now run the appanalyzer using `aa.sh`
+
+#### Installing a publicly available plugin
+
+1. to show all available plugins `./aa.sh plugin list available`
+2. select the plugin of interest and install via `./aa.sh plugin install <pluginNameCaseSensitive>`
 
 ### For physical devices
 
