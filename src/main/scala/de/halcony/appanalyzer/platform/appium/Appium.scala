@@ -12,7 +12,12 @@ import org.openqa.selenium.{By, OutputType, WebElement}
 import wvlet.log.LogSupport
 
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
+import java.io.{
+  BufferedWriter,
+  ByteArrayInputStream,
+  FileWriter
+}
+import java.nio.file.{Files, Paths}
 import java.util.Base64
 import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.CollectionHasAsScala
@@ -21,6 +26,21 @@ import scala.sys.process.{Process, ProcessLogger}
 trait Appium extends LogSupport {
   protected def getPort: String = "4723"
   protected def getServer: String = "0.0.0.0"
+
+  private val APPIUM_LOG_FILE = "./appium.log"
+
+  private def writeToAppiumLogFile(otype: String, string: String): Unit =
+    synchronized {
+      val writer = new BufferedWriter(new FileWriter(APPIUM_LOG_FILE, true))
+      try {
+
+        writer.write(
+          s"[${java.time.LocalDateTime.now().toString}][$otype] $string\n")
+      } finally {
+        writer.flush()
+        writer.close()
+      }
+    }
 
   // I force an override here to ensure a developer does not forget about this
   protected var driver: Option[AppiumDriver]
@@ -33,7 +53,10 @@ trait Appium extends LogSupport {
     */
   private def startAppiumServer(appium: String): Unit = {
     info("starting appium server")
-    appiumProcess = Some(Process(appium).run(ProcessLogger(_ => ())))
+    appiumProcess = Some(
+      Process(appium).run(
+        ProcessLogger(fout => writeToAppiumLogFile("INFO", fout),
+                      ferr => writeToAppiumLogFile("ERROR", ferr))))
     // we give appium 10 seconds to start up
     Thread.sleep(10000)
   }
@@ -163,7 +186,7 @@ object Appium extends LogSupport {
         appium.connect(appId)
       } catch {
         case x: Throwable =>
-          error(s"encountered appium start error: ${x.getMessage}")
+          error(s"encountered appium start error:\n ${x.getMessage}")
           device.PLATFORM_OS match {
             case appanalyzer.platform.PlatformOS.Android =>
               info("restarting the device and performing reconnect")
@@ -174,7 +197,7 @@ object Appium extends LogSupport {
                 appium.connect(appId)
               } catch {
                 case x: Throwable =>
-                  error(s"restart did not help: ${x.getMessage}")
+                  error(s"restart did not help:\n ${x.getMessage}")
                   throw new FatalError("Appium did not start successfully")
               }
             case appanalyzer.platform.PlatformOS.iOS =>
