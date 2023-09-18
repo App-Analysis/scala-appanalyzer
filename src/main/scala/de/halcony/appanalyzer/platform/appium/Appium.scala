@@ -12,12 +12,7 @@ import org.openqa.selenium.{By, OutputType, WebElement}
 import wvlet.log.LogSupport
 
 import java.awt.image.BufferedImage
-import java.io.{
-  BufferedWriter,
-  ByteArrayInputStream,
-  FileWriter
-}
-import java.nio.file.{Files, Paths}
+import java.io.{BufferedWriter, ByteArrayInputStream, FileWriter}
 import java.util.Base64
 import javax.imageio.ImageIO
 import scala.jdk.CollectionConverters.CollectionHasAsScala
