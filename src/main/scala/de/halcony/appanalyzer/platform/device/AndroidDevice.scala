@@ -15,6 +15,7 @@ import de.halcony.appanalyzer.platform.exceptions.{
 }
 import wvlet.log.LogSupport
 
+import java.io.{BufferedWriter, FileWriter}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, MILLISECONDS}
@@ -22,6 +23,20 @@ import scala.concurrent.{Await, Future}
 import scala.sys.process.{Process, ProcessLogger, _}
 
 case class AndroidDevice(conf: Config) extends Device with LogSupport {
+
+  private val FRIDA_LOG_FILE = "./frida.log"
+
+  private def writeFridaLog(outType: String, msg: String): Unit = synchronized {
+    val writer = new BufferedWriter(new FileWriter(FRIDA_LOG_FILE, true))
+    try {
+
+      writer.write(
+        s"[${java.time.LocalDateTime.now().toString}][$outType] $msg\n")
+    } finally {
+      writer.flush()
+      writer.close()
+    }
+  }
 
   /** adb return codes
     *
@@ -36,8 +51,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   var objection: Option[Process] = None
   private var packageAnalysis: Option[Analysis] = None
 
-  private var runningFrida
-    : Option[(Process, ListBuffer[String], ListBuffer[String])] = None
+  private var runningFrida: Option[Process] = None
 
   override def startDevice()
     : Unit = {} // the smartphone is supposed to be already on
@@ -94,13 +108,13 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           killProcess(pid)
         case None =>
       }
-      val stdin = ListBuffer[String]()
-      val stderr = ListBuffer[String]()
       val process =
         Process(
           s"${conf.android.adb} shell 'su -c /data/local/tmp/frida-server'")
-          .run(ProcessLogger(in => stdin.append(in), err => stderr.append(err)))
-      runningFrida = Some((process, stdin, stderr))
+          .run(
+            ProcessLogger(in => writeFridaLog("info", in),
+                          err => writeFridaLog("error", err)))
+      runningFrida = Some(process)
       Thread.sleep(2000) // this ensures that if frida dies on startup we can see/catch it
       if (!process.isAlive()) {
         increaseFailedInteractions()
@@ -113,18 +127,13 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   override def stopFrida(): Unit = {
     info("stopping frida")
     runningFrida match {
-      case Some((process, stdin, stderr)) =>
+      case Some(process) =>
         if (!process.isAlive()) {
           increaseFailedInteractions()
-          throw FridaDied()
+          //throw FridaDied()
+        } else {
+          process.destroy()
         }
-        process.destroy()
-        val err = stderr.mkString("\n") + stdin.mkString("\n")
-        if (err != "") {
-          error(s"while running frida we encountered output:\n$err")
-        }
-        stdin.clear()
-        stderr.clear()
         runningFrida = None
         detectRunningFrida() match {
           case Some(pid) =>
@@ -402,7 +411,6 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   override def getForegroundAppId: Option[String] = {
     val cmd = s"${conf.android.adb} shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
     val ret = cmd.!!
-    //info(ret)
     ret.split("\n").find(_.contains("mCurrentFocus=")) match {
       case Some(value) =>
         val _ :: rhs :: Nil = value.split("=").toList
