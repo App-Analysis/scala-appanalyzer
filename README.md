@@ -65,7 +65,7 @@ We have a dedicated documentation on how to set up [Android](/ANDROID.md), [Andr
 ### Plugins
 
 The app analyzer uses a plugin structure and publicly available plugins can be added in the configuration in the `plugin`
-section and managed via `./aa.sh plugin ...`. For further instructions read the [plugin documentation](./PLUGIINS.md).
+section and managed via `./aa.sh plugin ...`. For further instructions read the [plugin documentation](./PLUGIN.md).
 
 
 ## Running A Measurement
