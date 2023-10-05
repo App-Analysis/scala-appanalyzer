@@ -8,3 +8,4 @@
 config.json
 /plugins/*
 /resources/trafficCollection/__pycache__/
+!/plugins/.gitkeep
