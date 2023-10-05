@@ -7,8 +7,10 @@ import de.halcony.appanalyzer
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
-case class MobileApp(id: String, version: String, os: PlatformOS, path: String)
+case class MobileApp(id: String, version: String, os: PlatformOS, private val _path: String) 
     extends LogSupport {
+  val path: String = s""""${_path}""""
+  val serializedPath: String = _path
 
   /** get the os in string format
     *

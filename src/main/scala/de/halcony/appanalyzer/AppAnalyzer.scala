@@ -178,7 +178,7 @@ object AppAnalyzer extends LogSupport {
             "id" -> JsString(app.id),
             "version" -> JsString(app.version),
             "os" -> JsString(app.getOsString),
-            "path" -> JsString(app.path)
+            "path" -> JsString(app.serializedPath)
           )
       }).prettyPrint)
     } finally {
