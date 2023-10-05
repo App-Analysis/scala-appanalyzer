@@ -2,6 +2,7 @@
   "timeoutMilli" : 900000,
   "verbose" : false,
   "appium" : "appium",
+  "appiumURLExtension" : "wd/hub/",
   "tmpFolder" : "/tmp/folder/",
   "mitm" : {
     "path" : "mitmdump",
