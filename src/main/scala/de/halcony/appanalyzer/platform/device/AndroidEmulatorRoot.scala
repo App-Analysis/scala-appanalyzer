@@ -37,6 +37,12 @@ class AndroidEmulatorRoot(config: Config)
       ProcessLogger(_ => (), _ => ())
     )
   }
+  
+  override def uninstallApp(appId: String): Unit = {
+    super.uninstallApp(appId)
+    info(s"restarting emulator to continue with next app")
+    restartPhone()
+  }
 
   override def startDevice(): Unit = ensureDevice()
 
