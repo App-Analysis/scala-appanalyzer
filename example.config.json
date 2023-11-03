@@ -45,6 +45,7 @@
     "apkanalyzer" : "apkanalyzer"
   },
   "ios" : {
+    "appium" : false,
     "rootpwd" : "alpine",
     "ip" : "iPhone IP",
     "ideviceinstaller" : "ideviceinstaller",
