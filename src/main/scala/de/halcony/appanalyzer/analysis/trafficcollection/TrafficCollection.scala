@@ -4,6 +4,7 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
+import wvlet.log.LogSupport
 
 import scala.sys.process.{Process, ProcessLogger}
 
@@ -11,7 +12,7 @@ class TrafficCollection(analysis: Int,
                         interface: Option[Int],
                         comment: String,
                         conf: Config,
-                        dumb: Boolean = false) {
+                        dumb: Boolean = false) extends LogSupport {
 
   private var id: Option[Int] = None
   private var mitmproxy: Option[Process] = None
@@ -59,8 +60,9 @@ class TrafficCollection(analysis: Int,
   }
 
   protected def startDumbProxy(): Unit = {
+    info("starting dump proxy")
     mitmproxy = Some(
-      Process(s"${conf.mitm.path} --mode transparent --allow-hosts mitm.it")
+      Process(s"""${conf.mitm.path} --ignore-hosts ".*""")
         .run(ProcessLogger(_ => (), _ => ())))
   }
 
