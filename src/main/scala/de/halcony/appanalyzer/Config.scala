@@ -15,6 +15,7 @@ case class DevicePreparation(clipboard: String,
                              altitude: Double)
 
 case class AndroidAnalysis(dexdump: String,
+                           appium : Boolean,
                            apkanalyzer: String,
                            adb: String,
                            objection: String,
@@ -27,6 +28,7 @@ case class iOSPermissionPopup(interaction: String,
 
 case class iOS(rootpwd: String,
                ip: String,
+               appium : Boolean,
                ideviceinstaller: String,
                ideviceinfo: String,
                fridaps: String,
@@ -87,12 +89,12 @@ object Config extends DefaultJsonProtocol {
   implicit val databaseFormat: RootJsonFormat[Database] = jsonFormat5(Database)
 
   implicit val androidApkAnalysisFormat: RootJsonFormat[AndroidAnalysis] =
-    jsonFormat5(AndroidAnalysis)
+    jsonFormat6(AndroidAnalysis)
 
   implicit val permissionPopupFormat: RootJsonFormat[iOSPermissionPopup] =
     jsonFormat4(iOSPermissionPopup)
 
-  implicit val iosFormat: RootJsonFormat[iOS] = jsonFormat10(iOS)
+  implicit val iosFormat: RootJsonFormat[iOS] = jsonFormat11(iOS)
 
   implicit val devicePreparationFormat: RootJsonFormat[DevicePreparation] =
     jsonFormat4(DevicePreparation)
