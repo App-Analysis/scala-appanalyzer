@@ -49,6 +49,7 @@ object AppAnalyzer extends LogSupport {
     .addSubparser(Parser("run","run an action/analysis")
       .addPositional("platform","the platform to be analyzed [android_device,android_device_non_root,android_emulator_root,ios]")
       .addPositional("path", "path to the required data for the chosen action")
+      .addOptional("defaultAppName","d","defaultAppName")
       .addSubparser(Parser("functionalityCheck", "run through all fundamental API actions to check if it works")
         .addDefault[(ParsingResult, Config) => Unit]("func", functionalityCheck))
       .addSubparser(Parser("plugin","run an analysis using a plugin")
@@ -62,7 +63,7 @@ object AppAnalyzer extends LogSupport {
         .addOptional("parameters","p","parameters",None,"a csv list of <key>=<value> pairs")
         .addDefault[(ParsingResult,Config) => Unit]("func",runPluginExperiment,"runs an experiment using the specified plugin")))
 
-  private object IgnoreMe extends Throwable
+  //private object IgnoreMe extends Throwable
 
   /** main function parsing config and command line
     *
@@ -194,7 +195,7 @@ object AppAnalyzer extends LogSupport {
    * @param os the operating system for which the apps are
    * @return a list of MobileApp objects
    */
-  private def filterAppsInFolder(folderPath : String, appPaths: List[String], conf : Config, os : PlatformOS, filtering : Boolean) : List[MobileApp] = {
+  private def filterAppsInFolder(folderPath : String, appPaths: List[String], conf : Config, os : PlatformOS, filtering : Boolean, defaultAppName : Option[String]) : List[MobileApp] = {
     val manifestFilePath = s"$folderPath/manifest.json"
     val manifest = MMap(readManifestFile(manifestFilePath).toList :_*)
     val inspector = os match {
@@ -211,7 +212,7 @@ object AppAnalyzer extends LogSupport {
                 case Some(app) => app
                 case None =>
                   warn(s"app $path not contained in the manifest.json")
-                  val app = appbinary.MobileApp(inspector.getAppId(appbinary.MobileApp("", "", os, path)), "NA", os, path)
+                  val app = appbinary.MobileApp(inspector.getAppId(appbinary.MobileApp("", "", os, path),defaultAppName), "NA", os, path)
                   manifest.synchronized(manifest.addOne(path -> app))
                   app
               }
@@ -267,7 +268,7 @@ object AppAnalyzer extends LogSupport {
           assert(path.endsWith(".apk"), s"path has to end with apk if not a directory in $path")
           (List(path),new File(path).getParentFile.getPath)
         }
-        filterAppsInFolder(folder,apks,conf,Android,filtering)
+        filterAppsInFolder(folder,apks,conf,Android,filtering,pargs.get[OptionalValue[String]]("defaultAppName").value)
       case PlatformOS.iOS =>
         val (ipas,folder) : (List[String],String) = if(new File(path).isDirectory) {
           (new File(path).listFiles().filter(_.isFile).filter(_.getPath.endsWith(".ipa")).map(_.getPath).toList,path)
@@ -275,7 +276,7 @@ object AppAnalyzer extends LogSupport {
           assert(path.endsWith(".ipa"), s"path has to end with ipa if not a directory in $path")
           (List(path), new File(path).getParentFile.getPath)
         }
-        filterAppsInFolder(folder,ipas,conf,PlatformOS.iOS,filtering)
+        filterAppsInFolder(folder,ipas,conf,PlatformOS.iOS,filtering,pargs.get[OptionalValue[String]]("defaultAppName").value)
 
     }
     val appSubset = apps.slice(0,getBatchSize(pargs).getOrElse(apps.length))
@@ -413,7 +414,7 @@ object AppAnalyzer extends LogSupport {
     val app = appbinary.MobileApp("","",PlatformOS.iOS,path)
 
     tryApiCommand("appPackageAnalysis.getAppId") {
-      Some(device.getAppPackageAnalysis(conf).getAppId(app))
+      Some(device.getAppPackageAnalysis(conf).getAppId(app,None))
     }
 
     tryApiCommand("installApp") {
@@ -421,7 +422,7 @@ object AppAnalyzer extends LogSupport {
       None
     }
 
-    val appId = device.getAppPackageAnalysis(conf).getAppId(app)
+    val appId = device.getAppPackageAnalysis(conf).getAppId(app,None)
 
     tryApiCommand("grantPermissios") {
       device.setAppPermissions(appId)
