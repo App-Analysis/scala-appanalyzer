@@ -413,9 +413,16 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     val ret = cmd.!!
     ret.split("\n").find(_.contains("mCurrentFocus=")) match {
       case Some(value) =>
-        val _ :: rhs :: Nil = value.split("=").toList
-        val _ :: _ :: idAndAction :: Nil = rhs.split(" ").toList
-        Some(idAndAction.split("/").head)
+        try {
+          val _ :: rhs :: Nil = value.split("=").toList
+          val _ :: _ :: idAndAction :: Nil = rhs.split(" ").toList
+          Some(idAndAction.split("/").head)
+        } catch {
+          case _ : MatchError =>
+            error(s"cannot process $value")
+            error(ret)
+            None
+        }
       case None =>
         error("no current focus found")
         None
