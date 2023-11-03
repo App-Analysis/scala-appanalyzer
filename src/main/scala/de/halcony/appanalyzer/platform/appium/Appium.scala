@@ -46,7 +46,7 @@ trait Appium extends LogSupport {
     *
     * @param appium path to the appium installation on the local machine
     */
-  private def startAppiumServer(appium: String): Unit = {
+  protected def startAppiumServer(appium: String): Unit = {
     info("starting appium server")
     appiumProcess = Some(
       Process(appium).run(
@@ -59,7 +59,7 @@ trait Appium extends LogSupport {
   /** stops any running appium server instance
     *
     */
-  private def stopAppiumServer(): Unit = {
+  protected def stopAppiumServer(): Unit = {
     appiumProcess match {
       case Some(value) => value.destroy()
       case None        =>
@@ -150,6 +150,7 @@ trait Appium extends LogSupport {
   }
 
   def setClipboardContent(content: String): Unit = {
+    info(s"set clipboard content $content")
     driver.get.asInstanceOf[HasClipboard].setClipboardText(content)
   }
 
@@ -171,9 +172,17 @@ object Appium extends LogSupport {
       func: Appium => T): T = {
     val appium: Appium = device.PLATFORM_OS match {
       case PlatformOS.Android =>
-        new AndroidAppium(conf)
+        if(conf.android.appium) {
+          new AndroidAppium(conf)
+        } else {
+          new NoAppium()
+        }
       case appanalyzer.platform.PlatformOS.iOS =>
-        new iOSAppium(conf)
+        if(conf.ios.appium) {
+          new iOSAppium(conf)
+        } else {
+          new NoAppium()
+        }
     }
     try {
       try {
