@@ -3,6 +3,8 @@ package de.halcony.appanalyzer.appbinary.apk
 import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import wvlet.log.LogSupport
+
+import scala.annotation.nowarn
 import scala.collection.mutable.ListBuffer
 import scala.sys.process._
 
@@ -20,7 +22,7 @@ case class APK(conf: Config) extends Analysis with LogSupport {
 
   override def cleanUp(): Unit = {}
 
-  override def getAppId(app: MobileApp): String = {
+  override def getAppId(app: MobileApp,@nowarn default : Option[String]): String = {
     val out = new ListBuffer[String]()
     val err = new ListBuffer[String]()
     val cmd = s"${conf.android.apkanalyzer} manifest application-id ${app.path}"
