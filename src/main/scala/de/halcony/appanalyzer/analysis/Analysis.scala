@@ -1,30 +1,15 @@
 package de.halcony.appanalyzer.analysis
 
-import de.halcony.appanalyzer.analysis.exceptions.{
-  AnalysisFatal,
-  InterfaceAnalysisCondition,
-  MissingInterfaceElement,
-  SkipThisApp,
-  StaleInterfaceElement,
-  UncaughtCondition,
-  WebDriverHissyFit
-}
+import de.halcony.appanalyzer.analysis.exceptions.{AnalysisFatal, InterfaceAnalysisCondition, MissingInterfaceElement, SkipThisApp, StaleInterfaceElement, UncaughtCondition, WebDriverHissyFit}
 import de.halcony.appanalyzer.analysis.interaction.Interface
 import de.halcony.appanalyzer.analysis.trafficcollection.TrafficCollection
 import de.halcony.appanalyzer.appbinary.MobileApp
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.{Config, Experiment, platform}
 import de.halcony.appanalyzer.platform.PlatformOS
-import de.halcony.appanalyzer.platform.appium.{Appium, iOSAppium}
+import de.halcony.appanalyzer.platform.appium.{Appium, NoAppium, iOSAppium}
 import de.halcony.appanalyzer.platform.device.Device
-import de.halcony.appanalyzer.platform.exceptions.{
-  AppClosedItself,
-  FatalError,
-  FridaDied,
-  UnableToInstallApp,
-  UnableToStartApp,
-  UnableToUninstallApp
-}
+import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, FatalError, FridaDied, UnableToInstallApp, UnableToStartApp, UnableToUninstallApp}
 import Analysis.AnalysisTookTooLong
 import de.halcony.appanalyzer.analysis.plugin.ActorPlugin
 import org.openqa.selenium.{StaleElementReferenceException, WebDriverException}
@@ -191,7 +176,8 @@ class Analysis(description: String,
                               flat = !collectInterfaceElements,
                               interfaceComment) // nothing to do here
       case platform.PlatformOS.iOS =>
-        if (appium.asInstanceOf[iOSAppium].getRidOfAlerts(conf))
+        // we have to make sure that we have appium access prior to removing any alerts
+        if (!appium.isInstanceOf[NoAppium] && appium.asInstanceOf[iOSAppium].getRidOfAlerts(conf))
           interaction.Interface(this,
                                 appium,
                                 flat = !collectInterfaceElements,
@@ -211,7 +197,7 @@ class Analysis(description: String,
       device.withRunningFrida {
         Appium.withRunningAppium(app.id, conf, device) { appium =>
           this.checkStop()
-          info("starting app for interface analysis")
+          info(s"starting app ${app.id} for interface analysis")
           actor.onAppStartup(this)
           if (app.id != "EMPTY")
             device.startApp(app.id)
