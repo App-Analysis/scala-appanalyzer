@@ -78,7 +78,9 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
   /*override def uninstallApp(appId: String): Unit = ???*/
 
   override def startApp(appId: String, retries: Int): Unit = {
-    s"${conf.android.adb} shell monkey -p $appId 1".!
+    val ret = s"${conf.android.adb} shell monkey -p $appId 1".!!
+    Thread.sleep(10000)
+    //info(ret)
   }
 
   /*override def closeApp(appId: String): Unit = ???*/
