@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.wvlet.airframe"     %% "airframe-log"            % "21.2.0",
   "org.slf4j"              %  "slf4j-nop"               % "2.0.0",
   "me.tongfei"             % "progressbar"              % "0.9.3",
-  "io.appium"              % "java-client"              % "8.5.1",
+  "io.appium"              % "java-client"              % "8.6.0",
   "org.scalikejdbc"        %% "scalikejdbc"             % "4.0.0",
   "org.postgresql"         % "postgresql"               % "42.2.18",
   "com.mchange"            % "mchange-commons-java"     % "0.2.20",
