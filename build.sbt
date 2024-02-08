@@ -101,7 +101,7 @@ ThisBuild / homepage := Some(url("https://github.com/simkoc/scala-appanalyzer"))
 
 
 // below is pretty much cargo cult/fuzzing....
-import ReleaseTransformations.*
+import ReleaseTransformations._
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseVersionBump := sbtrelease.Version.Bump.Bugfix
 publishTo := sonatypePublishToBundle.value
