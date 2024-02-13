@@ -14,6 +14,7 @@ class InterfaceElementInteraction(action: InteractionTypes.Interaction,
   def getAction: String = action match {
     case PRESS => "PRESS"
     case SWIPE => "SWIPE"
+    case WRITE => "WRITE"
   }
   def getInterface: Interface = onInterface
   def getElement: InterfaceElement =
