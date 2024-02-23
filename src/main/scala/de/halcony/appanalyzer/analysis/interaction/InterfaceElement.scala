@@ -1,6 +1,6 @@
 package de.halcony.appanalyzer.analysis.interaction
 
-import org.openqa.selenium.WebElement
+import org.openqa.selenium.{Rectangle, WebElement}
 
 class InterfaceElement(element: WebElement) {
 
@@ -17,6 +17,10 @@ class InterfaceElement(element: WebElement) {
   def click(): Unit = element.click()
 
   def getUnderlyingElement: WebElement = element
+
+  def getPosition: Rectangle = element.getRect
+
+  def getAttribute(attribute_name: String): String = element.getAttribute(attribute_name)
 
   def getElementType: String =
     try {

@@ -6,19 +6,19 @@ organization := "de.halcony"
 enablePlugins(JavaAppPackaging)
 
 libraryDependencies ++= Seq(
-  "org.scalatest"          %% "scalatest"               % "3.1.0" % Test,
+  "org.scalatest"          %% "scalatest"               % "3.2.15" % Test,
   "de.halcony"             %% "scala-argparse"          % "1.1.11",
   "io.spray"               %% "spray-json"              % "1.3.6",
-  "com.typesafe"           %  "config"                  % "1.4.1",
-  "org.wvlet.airframe"     %% "airframe-log"            % "21.2.0",
-  "org.slf4j"              %  "slf4j-nop"               % "2.0.0",
-  "me.tongfei"             % "progressbar"              % "0.9.3",
-  "io.appium"              % "java-client"              % "8.6.0",
+  "com.typesafe"           %  "config"                  % "1.4.2",
+  "org.wvlet.airframe"     %% "airframe-log"            % "23.3.0",
+  "org.slf4j"              %  "slf4j-nop"               % "2.0.5",
+  "me.tongfei"             % "progressbar"              % "0.9.5",
+  "io.appium"              % "java-client"              % "8.5.1",
   "org.scalikejdbc"        %% "scalikejdbc"             % "4.0.0",
-  "org.postgresql"         % "postgresql"               % "42.2.18",
+  "org.postgresql"         % "postgresql"               % "42.5.4",
   "com.mchange"            % "mchange-commons-java"     % "0.2.20",
-  "org.scala-lang.modules" %% "scala-xml"               % "2.0.1",
-  "org.clapper"            %% "classutil"               % "1.5.0",
+  "org.scala-lang.modules" %% "scala-xml"               % "2.1.0",
+  "org.clapper"            %% "classutil"               % "1.5.1",
 )
 
 ThisBuild / resolvers ++= Seq(
