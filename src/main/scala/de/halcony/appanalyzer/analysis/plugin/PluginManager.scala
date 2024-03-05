@@ -109,6 +109,7 @@ class PluginManager(conf: PluginManagerConfiguration) extends LogSupport {
     try {
       Class
         .forName(classInfo.name, true, childClassLoader)
+        .getDeclaredConstructor()
         .newInstance()
         .asInstanceOf[ActorPlugin]
         .setParameter(parameter)
