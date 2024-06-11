@@ -22,12 +22,15 @@ case class APK(conf: Config) extends Analysis with LogSupport {
 
   override def cleanUp(): Unit = {}
 
-  override def getAppId(app: MobileApp,@nowarn default : Option[String]): String = {
+  override def getAppId(
+      app: MobileApp,
+      @nowarn default: Option[String]
+  ): String = {
     val out = new ListBuffer[String]()
     val err = new ListBuffer[String]()
     val cmd = s"${conf.android.apkanalyzer} manifest application-id ${app.path}"
-    val ret = cmd ! (ProcessLogger(line => out.append(line),
-                                   line => err.append(line)))
+    val ret =
+      cmd ! (ProcessLogger(line => out.append(line), line => err.append(line)))
     if (ret != 0 || err.nonEmpty) {
       throw new RuntimeException("cannot read manifest file application-id")
     } else {

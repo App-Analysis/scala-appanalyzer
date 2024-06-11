@@ -4,7 +4,8 @@ package de.halcony.appanalyzer.platform.exceptions
   *
   * this condition MUST NOT BE SWALLOWED. At least rethrow it.
   *
-  * @param msg the corresponding message
+  * @param msg
+  *   the corresponding message
   */
 class FatalError(val msg: String) extends Throwable {
 

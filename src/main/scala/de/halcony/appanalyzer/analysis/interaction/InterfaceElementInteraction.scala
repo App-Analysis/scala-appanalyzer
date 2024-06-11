@@ -4,10 +4,12 @@ import de.halcony.appanalyzer.database.Postgres
 import InteractionTypes._
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 
-class InterfaceElementInteraction(action: InteractionTypes.Interaction,
-                                  onInterface: Interface,
-                                  onElement: Int,
-                                  leadingTo: Option[Interface]) {
+class InterfaceElementInteraction(
+    action: InteractionTypes.Interaction,
+    onInterface: Interface,
+    onElement: Int,
+    leadingTo: Option[Interface]
+) {
 
   private var id: Option[Int] = None
   def getId: Int = id.get
@@ -24,8 +26,8 @@ class InterfaceElementInteraction(action: InteractionTypes.Interaction,
 
   /** insert the interface element interaction
     *
-    * todo: this is a somewhat leaky abstraction as both (possible) interfaces have to already been inserted
-    *
+    * todo: this is a somewhat leaky abstraction as both (possible) interfaces
+    * have to already been inserted
     */
   def insert(): Unit = {
     Postgres.withDatabaseSession { implicit session =>

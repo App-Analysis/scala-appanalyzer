@@ -1,6 +1,14 @@
 package de.halcony.appanalyzer.analysis
 
-import de.halcony.appanalyzer.analysis.exceptions.{AnalysisFatal, InterfaceAnalysisCondition, MissingInterfaceElement, SkipThisApp, StaleInterfaceElement, UncaughtCondition, WebDriverHissyFit}
+import de.halcony.appanalyzer.analysis.exceptions.{
+  AnalysisFatal,
+  InterfaceAnalysisCondition,
+  MissingInterfaceElement,
+  SkipThisApp,
+  StaleInterfaceElement,
+  UncaughtCondition,
+  WebDriverHissyFit
+}
 import de.halcony.appanalyzer.analysis.interaction.Interface
 import de.halcony.appanalyzer.analysis.trafficcollection.TrafficCollection
 import de.halcony.appanalyzer.appbinary.MobileApp
@@ -9,7 +17,14 @@ import de.halcony.appanalyzer.{Config, Experiment, platform}
 import de.halcony.appanalyzer.platform.PlatformOS
 import de.halcony.appanalyzer.platform.appium.{Appium, NoAppium, iOSAppium}
 import de.halcony.appanalyzer.platform.device.Device
-import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, FatalError, FridaDied, UnableToInstallApp, UnableToStartApp, UnableToUninstallApp}
+import de.halcony.appanalyzer.platform.exceptions.{
+  AppClosedItself,
+  FatalError,
+  FridaDied,
+  UnableToInstallApp,
+  UnableToStartApp,
+  UnableToUninstallApp
+}
 import Analysis.AnalysisTookTooLong
 import de.halcony.appanalyzer.analysis.plugin.ActorPlugin
 import org.openqa.selenium.{StaleElementReferenceException, WebDriverException}
@@ -23,12 +38,13 @@ import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Analysis(description: String,
-               app: MobileApp,
-               actor: ActorPlugin,
-               device: Device,
-               conf: Config)
-    extends LogSupport {
+class Analysis(
+    description: String,
+    app: MobileApp,
+    actor: ActorPlugin,
+    device: Device,
+    conf: Config
+) extends LogSupport {
 
   private var id: Option[Int] = None
   private var activeTrafficCollection: Option[TrafficCollection] = None
@@ -43,7 +59,8 @@ class Analysis(description: String,
 
   /** set the running state of the analysis
     *
-    * @param value the boolean value to which to set it
+    * @param value
+    *   the boolean value to which to set it
     */
   private def setRunning(value: Boolean): Unit = synchronized {
     running = value
@@ -78,13 +95,16 @@ class Analysis(description: String,
         warn("there is already an active traffic collection")
       case None =>
         activeTrafficCollection = Some(
-          TrafficCollection.startDumbTrafficCollection(conf))
+          TrafficCollection.startDumbTrafficCollection(conf)
+        )
         trafficCollectionStart = Some(ZonedDateTime.now())
     }
   }
 
-  def startTrafficCollection(related: Option[Interface],
-                             comment: String): Unit = {
+  def startTrafficCollection(
+      related: Option[Interface],
+      comment: String
+  ): Unit = {
     info("starting traffic collection")
     val interfaceId = related match {
       case Some(value) => Some(value.getId)
@@ -96,14 +116,18 @@ class Analysis(description: String,
       case None =>
         activeTrafficCollection = Some(
           TrafficCollection
-            .startNewTrafficCollection(this.getId, interfaceId, comment, conf))
+            .startNewTrafficCollection(this.getId, interfaceId, comment, conf)
+        )
         trafficCollectionStart = Some(ZonedDateTime.now())
     }
   }
 
   def getTrafficCollectionStart: ZonedDateTime =
-    trafficCollectionStart.getOrElse(throw new FatalError(
-      "requesting traffic collection start time without ever starting traffic collection"))
+    trafficCollectionStart.getOrElse(
+      throw new FatalError(
+        "requesting traffic collection start time without ever starting traffic collection"
+      )
+    )
 
   def stopTrafficCollection(): Unit = {
     info("stopping traffic collection")
@@ -116,13 +140,16 @@ class Analysis(description: String,
     }
   }
 
-  def collectCurrentAppPreferences(comment: String,
-                                   context: Option[Int] = None): Unit = {
+  def collectCurrentAppPreferences(
+      comment: String,
+      context: Option[Int] = None
+  ): Unit = {
     info("collecting app preferences")
     val preferences = JsObject(
       "preferences" -> JsString(device.getPrefs(app.id).getOrElse("")),
       "platformSpecifics" -> JsString(
-        device.getPlatformSpecificData(app.id).getOrElse(""))
+        device.getPlatformSpecificData(app.id).getOrElse("")
+      )
     ).prettyPrint
     Postgres.withDatabaseSession { implicit session =>
       sql"""INSERT INTO AppPreferences (
@@ -156,7 +183,8 @@ class Analysis(description: String,
             true
           } else {
             error(
-              s"the foreground app is $value but we expected ${app.id} - this indicates that the app closed itself")
+              s"the foreground app is $value but we expected ${app.id} - this indicates that the app closed itself"
+            )
             false
           }
         case None => false
@@ -166,27 +194,39 @@ class Analysis(description: String,
     }
   }
 
-  private def handlePostAppStartup(interfaceComment: String,
-                                   appium: Appium,
-                                   device: Device): Interface = {
+  private def handlePostAppStartup(
+      interfaceComment: String,
+      appium: Appium,
+      device: Device
+  ): Interface = {
     device.PLATFORM_OS match {
       case PlatformOS.Android =>
-        interaction.Interface(this,
-                              appium,
-                              flat = !collectInterfaceElements,
-                              interfaceComment) // nothing to do here
+        interaction.Interface(
+          this,
+          appium,
+          flat = !collectInterfaceElements,
+          interfaceComment
+        ) // nothing to do here
       case platform.PlatformOS.iOS =>
         // we have to make sure that we have appium access prior to removing any alerts
-        if (!appium.isInstanceOf[NoAppium] && appium.asInstanceOf[iOSAppium].getRidOfAlerts(conf))
-          interaction.Interface(this,
-                                appium,
-                                flat = !collectInterfaceElements,
-                                interfaceComment)
+        if (
+          !appium.isInstanceOf[NoAppium] && appium
+            .asInstanceOf[iOSAppium]
+            .getRidOfAlerts(conf)
+        )
+          interaction.Interface(
+            this,
+            appium,
+            flat = !collectInterfaceElements,
+            interfaceComment
+          )
         else
-          interaction.Interface(this,
-                                appium,
-                                flat = !collectInterfaceElements,
-                                interfaceComment)
+          interaction.Interface(
+            this,
+            appium,
+            flat = !collectInterfaceElements,
+            interfaceComment
+          )
     }
   }
 
@@ -201,7 +241,9 @@ class Analysis(description: String,
           actor.onAppStartup(this)
           if (app.id != "EMPTY")
             device.startApp(app.id)
-          checkIfAppIsStillRunning(true) // initial check if the app startup even worked
+          checkIfAppIsStillRunning(
+            true
+          ) // initial check if the app startup even worked
           this.checkStop()
           info("extracting start interface")
           var currentInterface =
@@ -216,7 +258,9 @@ class Analysis(description: String,
                 case Some(action) => // this there was a click
                   info("actor indicates that he has further actions to perform")
                   action.getLeadingTo match {
-                    case Some(value) => // this means there is a resulting app interface
+                    case Some(
+                          value
+                        ) => // this means there is a resulting app interface
                       running = true
                       currentInterface = value
                       value.insert()
@@ -258,7 +302,8 @@ class Analysis(description: String,
     } finally {
       if (activeTrafficCollection.nonEmpty) {
         warn(
-          "after the analysis is done there is still an active traffic collection. Closing...")
+          "after the analysis is done there is still an active traffic collection. Closing..."
+        )
         stopTrafficCollection()
       }
       setRunning(false)
@@ -268,7 +313,8 @@ class Analysis(description: String,
   protected def insert(): Unit = {
     if (id.nonEmpty) {
       throw new RuntimeException(
-        "This analysis already has been inserted - this is a severe logic bug")
+        "This analysis already has been inserted - this is a severe logic bug"
+      )
     }
     val experiment = Experiment.getCurrentExperiment.id
     Postgres.withDatabaseSession { implicit session =>
@@ -308,9 +354,11 @@ class Analysis(description: String,
     }
   }
 
-  def addEncounteredError(err: Throwable,
-                          interfaceid: Option[Int] = None,
-                          silent: Boolean = false): Unit = {
+  def addEncounteredError(
+      err: Throwable,
+      interfaceid: Option[Int] = None,
+      silent: Boolean = false
+  ): Unit = {
     err match {
       case x: InterfaceAnalysisCondition =>
         if (!silent) error(s"analysis encountered error ${err.getMessage}")
@@ -331,7 +379,9 @@ class Analysis(description: String,
         }
       case err =>
         addEncounteredError(UncaughtCondition(err), interfaceid)
-        if (!err.isInstanceOf[AnalysisTookTooLong]) // we somewhat expected analysis took to long errors, need no stacktrace
+        if (
+          !err.isInstanceOf[AnalysisTookTooLong]
+        ) // we somewhat expected analysis took to long errors, need no stacktrace
           error(s"error was unexpected:\n${err.getStackTrace.mkString("\n")}")
     }
   }
@@ -363,22 +413,26 @@ object Analysis extends LogSupport {
       case Some(analysis) if analysis.getRunning =>
         throw new FatalError("trying to unset running analysis")
       case Some(analysis) if !analysis.getRunning =>
-      //everything is fine
+      // everything is fine
       case Some(_) =>
         throw new FatalError(
-          "this is a logic flaw and must never happen (see two matches before)")
+          "this is a logic flaw and must never happen (see two matches before)"
+        )
       case None =>
         // this is really weird and indicates something fundamentally flawed in the logic
         warn(
-          "unsetting an analysis that has never been started or created ... skip!")
+          "unsetting an analysis that has never been started or created ... skip!"
+        )
     }
     currentAnalysis = None
   }
 
-  def runAnalysis(actor: ActorPlugin,
-                  app: MobileApp,
-                  device: Device,
-                  conf: Config): Unit = {
+  def runAnalysis(
+      actor: ActorPlugin,
+      app: MobileApp,
+      device: Device,
+      conf: Config
+  ): Unit = {
     info(s"running analysis for ${app.toString}")
     device.ensureDevice()
     try {
@@ -394,7 +448,8 @@ object Analysis extends LogSupport {
             }
             do {
               logger.info(
-                s"setting up analysis ${actor.getDescription} for app $app")
+                s"setting up analysis ${actor.getDescription} for app $app"
+              )
               val analysis =
                 new Analysis(actor.getDescription, app, actor, device, conf)
               setCurrentAnalysis(analysis)
@@ -423,8 +478,10 @@ object Analysis extends LogSupport {
                   analysis.finish(false)
                   continue = false
                 case x: StaleElementReferenceException =>
-                  analysis.addEncounteredError(new StaleInterfaceElement(x),
-                                               None)
+                  analysis.addEncounteredError(
+                    new StaleInterfaceElement(x),
+                    None
+                  )
                   analysis.finish(false)
                   continue = false
                 case x: WebDriverException =>

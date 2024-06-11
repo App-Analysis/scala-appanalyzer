@@ -15,7 +15,7 @@ case class IPA(conf: Config) extends Analysis with LogSupport {
 
   override def getIncludedFiles(path: String): List[String] = {
     val zipinfo =
-      "zipinfo" //for now we are assuming this is installed - if this bites you later on ... well ...
+      "zipinfo" // for now we are assuming this is installed - if this bites you later on ... well ...
     val data = s"$zipinfo -l $path".!!
     data
       .split("\n")

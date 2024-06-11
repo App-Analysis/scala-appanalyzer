@@ -5,7 +5,11 @@ import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.{FridaScripts, iOSFridaScripts}
 import de.halcony.appanalyzer.platform.PlatformOS.{PlatformOS, iOS}
-import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, UnableToInstallApp, UnableToUninstallApp}
+import de.halcony.appanalyzer.platform.exceptions.{
+  AppClosedItself,
+  UnableToInstallApp,
+  UnableToUninstallApp
+}
 import spray.json.{JsArray, JsNumber, JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
 
@@ -21,9 +25,8 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
   var objection: Option[Process] = None
   private var runningFrida: Option[Process] = None
 
-  /**
-   *  permission names in the iOS database that need be given
-   */
+  /** permission names in the iOS database that need be given
+    */
   val PERMISSIONS_GIVE: List[String] = List(
     "kTCCServiceLiverpool",
     "kTCCServiceUbiquity",
@@ -37,17 +40,17 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     "kTCCServiceWillow",
     "kTCCServiceExposureNotification"
   )
-  /**
-   * permission names in the iOS database that need not be given
-   */
+
+  /** permission names in the iOS database that need not be given
+    */
   val PERMISSIONS_NOT_GIVE: List[String] = List(
     "kTCCServiceCamera",
     "kTCCServiceMicrophone",
     "kTCCServiceUserTracking"
   )
-  /**
-   *  the location of the permission db on the iPhone (14.5 14.7)
-   */
+
+  /** the location of the permission db on the iPhone (14.5 14.7)
+    */
   val DB_LOCATION = "/private/var/mobile/Library/TCC/TCC.db"
 
   override def startFrida(): Unit = {
@@ -59,7 +62,8 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
-  override def startDevice(): Unit = {} // the iPhone is supposed to be already on
+  override def startDevice()
+      : Unit = {} // the iPhone is supposed to be already on
 
   override def stopFrida(): Unit = {
     runningFrida match {
@@ -77,7 +81,9 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
 
   override def restartPhone(): Boolean = {
     // we cannot restart an iPhone.
-    warn("fake restarting iPhone, just a 2 minute sleep for everything to calm down")
+    warn(
+      "fake restarting iPhone, just a 2 minute sleep for everything to calm down"
+    )
     Thread.sleep(120000)
     false
   }
@@ -90,10 +96,12 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
-  override def resetDevice(): Unit = {} // we use a physical iPhone, there is no reset
+  override def resetDevice()
+      : Unit = {} // we use a physical iPhone, there is no reset
 
   override def clearStuckModals(): Unit = {
-    val cmd = s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} 'activator send libactivator.system.clear-switcher; activator send libactivator.system.homebutton'"
+    val cmd =
+      s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} 'activator send libactivator.system.clear-switcher; activator send libactivator.system.homebutton'"
     cmd.!
   }
 
@@ -106,7 +114,7 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
       if (ret.trim.split("\n").last != "Install: Complete")
         throw new RuntimeException(s"install of ${app.path} was not complete")
     } catch {
-      case x : RuntimeException => throw UnableToInstallApp(app,x.getMessage)
+      case x: RuntimeException => throw UnableToInstallApp(app, x.getMessage)
     }
   }
 
@@ -119,22 +127,27 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
       if (ret.trim.split("\n").last != "Uninstall: Complete")
         throw new RuntimeException(s"uninstall of $appId was not complete")
     } catch {
-      case x : RuntimeException => throw UnableToUninstallApp(MobileApp(appId,"NA",iOS,"NA"),x.getMessage)
+      case x: RuntimeException =>
+        throw UnableToUninstallApp(
+          MobileApp(appId, "NA", iOS, "NA"),
+          x.getMessage
+        )
     }
   }
 
   override def startApp(appId: String, retries: Int): Unit = {
-    val cmd = s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} open $appId"
+    val cmd =
+      s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} open $appId"
     cmd.!
-    Thread.sleep(10000) //we give each app ten seconds to start up
+    Thread.sleep(10000) // we give each app ten seconds to start up
   }
 
   override def closeApp(appId: String): Unit = {
     val pid = getPid(appId)
-    val cmd = s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} kill -9 $pid"
+    val cmd =
+      s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} kill -9 $pid"
     cmd.!!
   }
-
 
   override def performTouch(x: Int, y: Int): Unit = {
     // there is no touch functionality on iphone - maybe using appium?
@@ -144,19 +157,27 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     def setPermission(permission: String, give: Boolean): Int = {
       val value = if (give) 2 else 0
       val timestamp = Instant.now.getEpochSecond
-      val run = Process(List(
-        "sshpass", "-p", s"${conf.ios.rootpwd}",
-        "ssh", s"root@${conf.ios.ip}",
-        "sqlite3", DB_LOCATION, s"\"INSERT OR REPLACE INTO access VALUES ('$permission', '$appId', 0, $value, 2, 1, NULL, NULL, 0, 'UNUSED', NULL, 0, $timestamp);\""
-      )).run()
+      val run = Process(
+        List(
+          "sshpass",
+          "-p",
+          s"${conf.ios.rootpwd}",
+          "ssh",
+          s"root@${conf.ios.ip}",
+          "sqlite3",
+          DB_LOCATION,
+          s"\"INSERT OR REPLACE INTO access VALUES ('$permission', '$appId', 0, $value, 2, 1, NULL, NULL, 0, 'UNUSED', NULL, 0, $timestamp);\""
+        )
+      ).run()
       run.exitValue()
     }
 
     def grantLocationPermission(appId: String): Unit = {
-      val openSettings = s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} open com.apple.Preferences"
+      val openSettings =
+        s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} open com.apple.Preferences"
       info("opening com.apple.Preferences")
       openSettings.!
-      Thread.sleep(5000) //sleep to ensure that the settings are actually open
+      Thread.sleep(5000) // sleep to ensure that the settings are actually open
       val cmd = s"node ./resources/frida/iosGrantLocationPermission.js $appId"
       cmd.!
     }
@@ -178,7 +199,9 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
 
   override def getPrefs(appId: String): Option[String] = {
     val pid = getPid(appId)
-    Some(this.runFridaScript(pid, FridaScripts.platform(this.PLATFORM_OS).getPrefs))
+    Some(
+      this.runFridaScript(pid, FridaScripts.platform(this.PLATFORM_OS).getPrefs)
+    )
   }
 
   override def getPlatformSpecificData(appId: String): Option[String] = {
@@ -186,7 +209,8 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     Some(this.runFridaScript(pid, iOSFridaScripts.getIdfv))
   }
 
-  override def getAppVersion(path: String): Option[String] = throw new NotImplementedError()
+  override def getAppVersion(path: String): Option[String] =
+    throw new NotImplementedError()
 
   override def getPid(appId: String): String = {
     val cmd = s"${conf.ios.fridaps} --usb --applications --json"
@@ -201,5 +225,6 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
-  override def checkBootState(): Boolean = true // there is no reboot, thus this is always true
+  override def checkBootState(): Boolean =
+    true // there is no reboot, thus this is always true
 }
