@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS Request (
                                        path varchar,
                                        content varchar,
                                        content_raw bytea,
-                                       port integer,
+                                       port Integer,
                                        scheme varchar,
                                        authority varchar,
                                        http_version varchar,
@@ -164,10 +164,11 @@ CREATE TABLE IF NOT EXISTS Request (
                                            ON DELETE CASCADE
 );
 
+
 DROP TABLE IF EXISTS Header CASCADE;
 CREATE TABLE IF NOT EXISTS Header (
                                       id SERIAL,
-                                      request integer,
+                                      request Integer,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -179,7 +180,7 @@ CREATE TABLE IF NOT EXISTS Header (
 DROP TABLE IF EXISTS Cookie CASCADE;
 CREATE TABLE IF NOT EXISTS Cookie (
                                       id SERIAL,
-                                      request integer,
+                                      request Integer,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -197,5 +198,62 @@ CREATE TABLE IF NOT EXISTS Trailer(
                                       PRIMARY KEY (id),
                                       FOREIGN KEY (request)
                                           REFERENCES Request(id)
+                                          ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS Response CASCADE;
+CREATE TABLE IF NOT EXISTS Response (
+                                       id Serial,
+                                       run Integer,
+                                       request Integer,
+                                       start_time timestamp with time zone,
+                                       http_version varchar,
+                                       status_code Integer,
+                                       reason varchar,
+                                       content_raw bytea,
+                                       content varchar,
+                                       error varchar,
+                                       PRIMARY KEY(id),
+                                       FOREIGN KEY (run)
+                                           REFERENCES TrafficCollection(id)
+                                           ON DELETE CASCADE,
+                                       FOREIGN KEY (request)
+                                            REFERENCES Request(id)
+                                            ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS ResponseHeader CASCADE;
+CREATE TABLE IF NOT EXISTS ResponseHeader (
+                                      id SERIAL,
+                                      response Integer,
+                                      name varchar,
+                                      values varchar,
+                                      PRIMARY KEY (id),
+                                      FOREIGN KEY (response)
+                                          REFERENCES Response(id)
+                                          ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS ResponseCookie CASCADE;
+CREATE TABLE IF NOT EXISTS ResponseCookie (
+                                      id SERIAL,
+                                      response Integer,
+                                      name varchar,
+                                      values varchar,
+                                      PRIMARY KEY (id),
+                                      FOREIGN KEY (response)
+                                          REFERENCES Response(id)
+                                          ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS ResponseTrailer CASCADE;
+CREATE TABLE IF NOT EXISTS ResponseTrailer(
+                                      id SERIAL,
+                                      response Integer,
+                                      name varchar,
+                                      values varchar,
+                                      PRIMARY KEY (id),
+                                      FOREIGN KEY (response)
+                                          REFERENCES Response(id)
                                           ON DELETE CASCADE
 );
