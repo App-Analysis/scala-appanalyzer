@@ -4,7 +4,8 @@ package de.halcony.appanalyzer.platform.exceptions
   *
   * UNUSED
   *
-  * @param appId the appid of the app that cannot be restarted
+  * @param appId
+  *   the appid of the app that cannot be restarted
   */
 case class AppRestartFailed(appId: String) extends Throwable {
 

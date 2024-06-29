@@ -30,7 +30,8 @@ trait Appium extends LogSupport {
       try {
 
         writer.write(
-          s"[${java.time.LocalDateTime.now().toString}][$otype] $string\n")
+          s"[${java.time.LocalDateTime.now().toString}][$otype] $string\n"
+        )
       } finally {
         writer.flush()
         writer.close()
@@ -44,20 +45,24 @@ trait Appium extends LogSupport {
 
   /** start an appium server instance
     *
-    * @param appium path to the appium installation on the local machine
+    * @param appium
+    *   path to the appium installation on the local machine
     */
   protected def startAppiumServer(appium: String): Unit = {
     info("starting appium server")
     appiumProcess = Some(
       Process(appium).run(
-        ProcessLogger(fout => writeToAppiumLogFile("INFO", fout),
-                      ferr => writeToAppiumLogFile("ERROR", ferr))))
+        ProcessLogger(
+          fout => writeToAppiumLogFile("INFO", fout),
+          ferr => writeToAppiumLogFile("ERROR", ferr)
+        )
+      )
+    )
     // we give appium 10 seconds to start up
     Thread.sleep(10000)
   }
 
   /** stops any running appium server instance
-    *
     */
   protected def stopAppiumServer(): Unit = {
     appiumProcess match {
@@ -67,21 +72,20 @@ trait Appium extends LogSupport {
   }
 
   /** connect the driver
-    *
     */
   protected def connect(appId: String): Unit
 
   /** stop any running appium driver connection
-    *
     */
   protected def stop(): Unit = {
     driver match {
       case Some(value) =>
         value
-          .quit() //if the appium server already stopped this will not terminate
+          .quit() // if the appium server already stopped this will not terminate
       case None =>
         warn(
-          "driver has not been created, could be due to an error being thrown just before creation")
+          "driver has not been created, could be due to an error being thrown just before creation"
+        )
     }
   }
 
@@ -89,8 +93,10 @@ trait Appium extends LogSupport {
 
   /** retrieve currently displayed elements by xpath string
     *
-    * @param xpath the xpath to use
-    * @return the list of elements
+    * @param xpath
+    *   the xpath to use
+    * @return
+    *   the list of elements
     */
   def findElementsByXPath(xpath: String): List[WebElement] = {
     this.driver.get
@@ -101,7 +107,8 @@ trait Appium extends LogSupport {
 
   /** take a screenshot
     *
-    * @return an option of a buffered image screenshot (none if screenshot failed)
+    * @return
+    *   an option of a buffered image screenshot (none if screenshot failed)
     */
   def takeScreenshot: Option[BufferedImage] = {
     try {
@@ -109,7 +116,8 @@ trait Appium extends LogSupport {
         this.driver
           .getOrElse(throw new RuntimeException("appium is not connected"))
           .getScreenshotAs(OutputType.BASE64)
-          .replaceAll("\n", ""))
+          .replaceAll("\n", "")
+      )
       val inputStream = new ByteArrayInputStream(bytes)
       val image: BufferedImage = ImageIO.read(inputStream)
       Some(image)
@@ -119,22 +127,26 @@ trait Appium extends LogSupport {
         None
       case x: Throwable =>
         error(
-          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}")
+          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}"
+        )
         None
     }
   }
 
   /** takes a screenshot of the given element
     *
-    * @param element the element to take a screenshot of
-    * @return an option for a buffered image (none if retrieving screenshot failed)
+    * @param element
+    *   the element to take a screenshot of
+    * @return
+    *   an option for a buffered image (none if retrieving screenshot failed)
     */
   def takeElementScreenshot(element: WebElement): Option[BufferedImage] = {
     try {
       val bytes: Array[Byte] = Base64.getDecoder.decode(
         element
           .getScreenshotAs(OutputType.BASE64)
-          .replaceAll("\n", ""))
+          .replaceAll("\n", "")
+      )
       val inputStream = new ByteArrayInputStream(bytes)
       val image: BufferedImage = ImageIO.read(inputStream)
       Some(image)
@@ -144,7 +156,8 @@ trait Appium extends LogSupport {
         None
       case x: Throwable =>
         error(
-          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}")
+          s"taking screenshot resulted in: ${x.getClass.toString} ${x.getMessage}"
+        )
         None
     }
   }
@@ -163,22 +176,27 @@ object Appium extends LogSupport {
     * IMPORTANT: You need to start the app AFTER appium as starting appium might
     * trigger a restart on Android if it fails to start
     *
-    * @param conf the current config
-    * @param func the function to execute with appium active
-    * @tparam T the return type
-    * @return the return value of the function func
+    * @param conf
+    *   the current config
+    * @param func
+    *   the function to execute with appium active
+    * @tparam T
+    *   the return type
+    * @return
+    *   the return value of the function func
     */
   def withRunningAppium[T](appId: String, conf: Config, device: Device)(
-      func: Appium => T): T = {
+      func: Appium => T
+  ): T = {
     val appium: Appium = device.PLATFORM_OS match {
       case PlatformOS.Android =>
-        if(conf.android.appium) {
+        if (conf.android.appium) {
           new AndroidAppium(conf)
         } else {
           new NoAppium()
         }
       case appanalyzer.platform.PlatformOS.iOS =>
-        if(conf.ios.appium) {
+        if (conf.ios.appium) {
           new iOSAppium(conf)
         } else {
           new NoAppium()

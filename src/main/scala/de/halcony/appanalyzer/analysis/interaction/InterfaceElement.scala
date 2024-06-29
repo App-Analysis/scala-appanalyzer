@@ -5,10 +5,10 @@ import org.openqa.selenium.{Rectangle, WebElement}
 class InterfaceElement(element: WebElement) {
 
   private val text = element.getText
-  val isDisplayed
-    : Boolean = true // extracting this information takes too long with appium for some apps
-  val isEnabled
-    : Boolean = true // extracting this information takes too long with appium for some apps
+  val isDisplayed: Boolean =
+    true // extracting this information takes too long with appium for some apps
+  val isEnabled: Boolean =
+    true // extracting this information takes too long with appium for some apps
 
   def getText: String = text
 
@@ -20,7 +20,8 @@ class InterfaceElement(element: WebElement) {
 
   def getPosition: Rectangle = element.getRect
 
-  def getAttribute(attribute_name: String): String = element.getAttribute(attribute_name)
+  def getAttribute(attribute_name: String): String =
+    element.getAttribute(attribute_name)
 
   def getElementType: String =
     try {

@@ -28,7 +28,8 @@ class AndroidEmulatorRoot(config: Config)
       case Some(value) => List("-snapshot", value)
       case None        => List()
     }
-    val cmdArgs: Seq[String] = List[String]("-avd", conf.avd) ++ snapshotConf ++ proxyConf
+    val cmdArgs: Seq[String] =
+      List[String]("-avd", conf.avd) ++ snapshotConf ++ proxyConf
     info(s"starting emulator with args : ${cmdArgs.mkString(" ")}")
     Process(
       conf.emulator,
@@ -37,7 +38,7 @@ class AndroidEmulatorRoot(config: Config)
       ProcessLogger(_ => (), _ => ())
     )
   }
-  
+
   override def uninstallApp(appId: String): Unit = {
     super.uninstallApp(appId)
     info(s"restarting emulator to continue with next app")

@@ -12,24 +12,28 @@ class NoAppium() extends Appium with LogSupport {
 
   override protected var driver: Option[AppiumDriver] = None
 
-  override protected def startAppiumServer(appium : String) : Unit = {}
+  override protected def startAppiumServer(appium: String): Unit = {}
 
-  override protected def stopAppiumServer() : Unit = {}
-
+  override protected def stopAppiumServer(): Unit = {}
 
   override protected def connect(appId: String): Unit = {}
 
-  override def stop() : Unit = {}
+  override def stop(): Unit = {}
 
-  override def getAllElements : List[WebElement] = List()
+  override def getAllElements: List[WebElement] = List()
 
   override def findElementsByXPath(xpath: String): List[WebElement] = List()
 
-  override def takeScreenshot: Option[BufferedImage] = Some(new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB))
+  override def takeScreenshot: Option[BufferedImage] = Some(
+    new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+  )
 
-  override def takeElementScreenshot(element: WebElement): Option[BufferedImage] = Some(new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB))
+  override def takeElementScreenshot(
+      element: WebElement
+  ): Option[BufferedImage] = Some(
+    new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+  )
 
   override def setClipboardContent(content: String): Unit = {}
-
 
 }

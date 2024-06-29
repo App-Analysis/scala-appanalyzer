@@ -34,17 +34,20 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
     }
     if (!checkBootState())
       throw new FatalError(
-        "We were unable to successfully restart the phone ... sucks mate")
+        "We were unable to successfully restart the phone ... sucks mate"
+      )
     Thread.sleep(1000)
-    performTouch(1000, 800) //todo: this should be configured in the config
+    performTouch(1000, 800) // todo: this should be configured in the config
     info(
-      "we unlocked the phone, now we wait for another 2 minutes for everything to boot up")
+      "we unlocked the phone, now we wait for another 2 minutes for everything to boot up"
+    )
     Thread.sleep(120000)
     if (checkBootState()) {
       true
     } else {
       throw new FatalError(
-        "After unlocking the phone died ... sucks even more mate")
+        "After unlocking the phone died ... sucks even more mate"
+      )
     }
   }
 
@@ -69,7 +72,7 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
   }*/
 
   override def resetDevice()
-    : Unit = {} // no frida/objection means no process to reset
+      : Unit = {} // no frida/objection means no process to reset
 
   /*override def clearStuckModals(): Unit = */
 
@@ -80,7 +83,7 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
   override def startApp(appId: String, retries: Int): Unit = {
     val ret = s"${conf.android.adb} shell monkey -p $appId 1".!!
     Thread.sleep(10000)
-    //info(ret)
+    // info(ret)
   }
 
   /*override def closeApp(appId: String): Unit = ???*/

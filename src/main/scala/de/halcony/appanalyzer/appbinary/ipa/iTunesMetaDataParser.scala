@@ -15,7 +15,8 @@ object iTunesMetaDataParser {
       .grouped(2)
       .map { pair =>
         (parseKey(pair.head.asInstanceOf[Elem]) -> parseElement(
-          pair(1).asInstanceOf[Elem]))
+          pair(1).asInstanceOf[Elem]
+        ))
       }
       .toMap
     MetaDict(map)

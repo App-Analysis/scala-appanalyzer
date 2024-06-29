@@ -10,11 +10,12 @@ import wvlet.log.LogSupport
 import java.nio.charset.StandardCharsets
 import javax.imageio.ImageIO
 
-class Interface(elements: List[InterfaceElement],
-                belongsTo: Analysis,
-                appium: Appium,
-                comment: String = "")
-    extends LogSupport {
+class Interface(
+    elements: List[InterfaceElement],
+    belongsTo: Analysis,
+    appium: Appium,
+    comment: String = ""
+) extends LogSupport {
 
   def getComment: String = comment
 
@@ -33,7 +34,6 @@ class Interface(elements: List[InterfaceElement],
   /** inserting the given interface into the database
     *
     * requires the context analysis to be already inserted
-    *
     */
   def insert(): Unit = {
     info(s"inserting interface $comment")
@@ -64,11 +64,13 @@ class Interface(elements: List[InterfaceElement],
         .apply()
       val map = elements.map { element =>
         belongsTo
-          .checkStop() //as interacting with the elements of an app can take quite a time we need to check for timeouts
+          .checkStop() // as interacting with the elements of an app can take quite a time we need to check for timeouts
         val text = {
           val buff = element.getText
           try {
-            buff.getBytes(StandardCharsets.UTF_8) // check if we have valid UTF-8 text
+            buff.getBytes(
+              StandardCharsets.UTF_8
+            ) // check if we have valid UTF-8 text
             buff
           } catch {
             case _: Throwable =>
@@ -125,16 +127,23 @@ object Interface extends LogSupport {
 
   /** creates a new interface based on the currently displayed one on the device
     *
-    * @param analysis the analysis context of the interface
-    * @param appium the running appium instance
-    * @param flat if set no elements will be extracted (thus only the whole screenshot is stored)
-    * @param comment a comment to store alongside the interface in the database
+    * @param analysis
+    *   the analysis context of the interface
+    * @param appium
+    *   the running appium instance
+    * @param flat
+    *   if set no elements will be extracted (thus only the whole screenshot is
+    *   stored)
+    * @param comment
+    *   a comment to store alongside the interface in the database
     * @return
     */
-  def apply(analysis: Analysis,
-            appium: Appium,
-            flat: Boolean = false,
-            comment: String = ""): Interface = {
+  def apply(
+      analysis: Analysis,
+      appium: Appium,
+      flat: Boolean = false,
+      comment: String = ""
+  ): Interface = {
     val elements = if (!flat) {
       appium.getAllElements
         .map { elem =>

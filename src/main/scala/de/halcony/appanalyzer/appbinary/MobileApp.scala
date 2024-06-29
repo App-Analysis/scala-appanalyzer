@@ -7,14 +7,19 @@ import de.halcony.appanalyzer
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
-case class MobileApp(id: String, version: String, os: PlatformOS, private val _path: String) 
-    extends LogSupport {
+case class MobileApp(
+    id: String,
+    version: String,
+    os: PlatformOS,
+    private val _path: String
+) extends LogSupport {
   val path: String = s""""${_path}""""
   val serializedPath: String = _path
 
   /** get the os in string format
     *
-    * @return the os as a string
+    * @return
+    *   the os as a string
     */
   def getOsString: String = os match {
     case PlatformOS.Android                  => "android"
@@ -22,7 +27,6 @@ case class MobileApp(id: String, version: String, os: PlatformOS, private val _p
   }
 
   /** insert the app into the connected database
-    *
     */
   def insert(): Unit = {
     Postgres.withDatabaseSession { implicit session =>
@@ -58,8 +62,10 @@ object MobileApp {
 
   /** convert a given string into the corresponding os enum
     *
-    * @param os the os string
-    * @return the corresponding enum field
+    * @param os
+    *   the os string
+    * @return
+    *   the corresponding enum field
     */
   def stringToOsEnum(os: String): PlatformOS = {
     os match {
