@@ -204,11 +204,8 @@ object Appium extends LogSupport {
     }
     try {
       try {
-        debug("starting appium server")
         appium.startAppiumServer(conf.appium)
-        debug("appium server started, connecting ...")
         appium.connect(appId)
-        debug("connected to appium")
       } catch {
         case x: Throwable =>
           error(s"encountered appium start error:\n ${x.getMessage}")
