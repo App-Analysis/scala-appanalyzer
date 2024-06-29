@@ -20,7 +20,7 @@ import scala.sys.process.{Process, ProcessLogger}
 
 trait Appium extends LogSupport {
   protected def getPort: String = "4723"
-  protected def getServer: String = "127.0.0.1"
+  protected def getServer: String = "0.0.0.0"
 
   private val APPIUM_LOG_FILE = "./appium.log"
 
