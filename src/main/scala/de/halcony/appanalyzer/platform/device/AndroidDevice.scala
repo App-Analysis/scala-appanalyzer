@@ -25,6 +25,11 @@ import scala.sys.process.{Process, ProcessLogger, _}
 case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   private val FRIDA_LOG_FILE = "./frida.log"
+  private var deactivate_install = false
+
+  def deactivateInstall(deactivate : Boolean) : Unit = {
+    deactivate_install = deactivate
+  }
 
   private def writeFridaLog(outType: String, msg: String): Unit = synchronized {
     val writer = new BufferedWriter(new FileWriter(FRIDA_LOG_FILE, true))
