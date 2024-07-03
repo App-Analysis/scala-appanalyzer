@@ -31,11 +31,11 @@ class TrafficCollection(
       "--set",
       s"run=${id.get}"
     )
-    parameters match {
-      case Some(value) =>
-        cmd_list = cmd_list ++ value.toVector
-      case None =>
+    if (parameters.nonEmpty) {
+      info("adding parameters to mitmproxy")
+      cmd_list = cmd_list ++ parameters.get.toVector
     }
+    info(s"starting mitmproxy with command: ${cmd_list.mkString(" ")}")
     mitmproxy = Some(
       Process(
         cmd_list.mkString(" "),
