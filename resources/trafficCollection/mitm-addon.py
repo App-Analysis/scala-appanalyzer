@@ -79,7 +79,13 @@ class MitmAddon:
             execute_values(self.cur, "INSERT INTO header (request, name, values) VALUES %s",
                            [(request_id, k, v) for k, v in decoded_headers.items()])
             self.conn.commit()
-
+        # cookies
+        decoded_cookies: dict = mdv_to_dict(r.cookies)
+        if len(decoded_cookies) > 0:
+            # print([(request_id, k, v) for k, v in decoded_headers.items()])
+            execute_values(self.cur, "INSERT INTO cookie (request, name, values) VALUES %s",
+                           [(response_id, k, v) for k, v in decoded_cookies.items()])
+            self.conn.commit()
         # trailers
         decoded_trailers: dict = mdv_to_dict(r.trailers)
         if decoded_trailers and len(decoded_trailers) > 0:
