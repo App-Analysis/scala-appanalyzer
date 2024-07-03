@@ -13,7 +13,8 @@ class TrafficCollection(
     interface: Option[Int],
     comment: String,
     conf: Config,
-    dumb: Boolean = false
+    dumb: Boolean = false,
+    parameters: Option[Seq[String]] = None
 ) extends LogSupport {
 
   private var id: Option[Int] = None
@@ -23,9 +24,21 @@ class TrafficCollection(
     assert(mitmproxy.isEmpty)
     val cmd =
       s"${conf.mitm.path} -s ${conf.mitm.addonScript} --set run=${id.get}"
+    var cmd_list: Vector[String] = Vector(
+      conf.mitm.path,
+      "-s",
+      conf.mitm.addonScript,
+      "--set",
+      s"run=${id.get}"
+    )
+    parameters match {
+      case Some(value) =>
+        cmd_list = cmd_list ++ value.toVector
+      case None =>
+    }
     mitmproxy = Some(
       Process(
-        cmd,
+        cmd_list.mkString(" "),
         None,
         "POSTGRES_HOST" -> conf.db.host,
         "HOST_PORT" -> conf.db.port.toString,
@@ -102,7 +115,8 @@ object TrafficCollection {
       analysis: Int,
       interface: Option[Int],
       comment: String,
-      conf: Config
+      conf: Config,
+      parameters: Option[Seq[String]] = None
   ): TrafficCollection = {
     activeTrafficCollection match {
       case Some(_) =>
@@ -114,7 +128,8 @@ object TrafficCollection {
             interface,
             comment,
             conf,
-            dumb = false
+            dumb = false,
+            parameters = parameters
           )
         )
         activeTrafficCollection.get.start()
