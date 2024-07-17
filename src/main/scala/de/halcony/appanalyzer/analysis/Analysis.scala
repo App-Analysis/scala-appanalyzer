@@ -103,7 +103,8 @@ class Analysis(
 
   def startTrafficCollection(
       related: Option[Interface],
-      comment: String
+      comment: String,
+      parameters: Option[Seq[String]] = None
   ): Unit = {
     info("starting traffic collection")
     val interfaceId = related match {
@@ -116,7 +117,13 @@ class Analysis(
       case None =>
         activeTrafficCollection = Some(
           TrafficCollection
-            .startNewTrafficCollection(this.getId, interfaceId, comment, conf)
+            .startNewTrafficCollection(
+              this.getId,
+              interfaceId,
+              comment,
+              conf,
+              parameters
+            )
         )
         trafficCollectionStart = Some(ZonedDateTime.now())
     }
