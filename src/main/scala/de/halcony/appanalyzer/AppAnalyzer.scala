@@ -316,7 +316,7 @@ object AppAnalyzer extends LogSupport {
       filtering: Boolean,
       defaultAppName: Option[String]
   ): List[MobileApp] = {
-    val manifestFilePath = s"$folderPath/manifest.json"
+    val manifestFilePath = conf.manifestFile
     val manifest = MMap(readManifestFile(manifestFilePath).toList: _*)
     val inspector = os match {
       case Android        => APK(conf)
