@@ -22,8 +22,6 @@ class TrafficCollection(
 
   private def startMitmProxy(): Unit = {
     assert(mitmproxy.isEmpty)
-    val cmd =
-      s"${conf.mitm.path} -s ${conf.mitm.addonScript} --set run=${id.get}"
     var cmd_list: Vector[String] = Vector(
       conf.mitm.path,
       "-s",

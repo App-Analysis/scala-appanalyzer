@@ -27,7 +27,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   private val FRIDA_LOG_FILE = "./frida.log"
   private var deactivate_install = false
 
-  def deactivateInstall(deactivate : Boolean) : Unit = {
+  def deactivateInstall(deactivate: Boolean): Unit = {
     deactivate_install = deactivate
   }
 
