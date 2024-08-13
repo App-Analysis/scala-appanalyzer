@@ -678,13 +678,10 @@ object AppAnalyzer extends LogSupport {
           try {
             read_csv
               .getLines()
-              .map(line =>
+              .flatMap(line =>
                 line.split("=") match {
-                  case Array(key, value) => (key.trim, value.trim)
-                  case _ =>
-                    throw new RuntimeException(
-                      s"Parameters file $parameters was malformed, please write the file as key1=value1\nkey2=value2"
-                    )
+                  case Array(key, value) => Some(key.trim, value.trim)
+                  case _ => None
                 }
               )
               .toMap
