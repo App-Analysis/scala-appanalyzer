@@ -680,7 +680,7 @@ object AppAnalyzer extends LogSupport {
               .getLines()
               .flatMap(line =>
                 line.split("=") match {
-                  case Array(key, value) => Some(key.trim, value.trim)
+                  case Array(key, value) => Some(key.trim -> value.trim)
                   case _ => None
                 }
               )
