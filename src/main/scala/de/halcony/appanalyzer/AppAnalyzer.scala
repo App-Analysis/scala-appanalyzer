@@ -9,33 +9,20 @@ import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{
-  AndroidDeviceNonRoot,
-  AndroidEmulatorRoot,
-  Device
-}
+import de.halcony.appanalyzer.platform.device.{AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOS, device}
-import de.halcony.argparse.{
-  OptionalValue,
-  Parser,
-  ParsingException,
-  ParsingResult
-}
+import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
 
 import java.io.{File, FileWriter}
+import java.nio.file.Paths
 import java.util.concurrent.Executors
 import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.duration.Duration.Inf
-import scala.concurrent.{
-  Await,
-  ExecutionContext,
-  ExecutionContextExecutorService,
-  Future
-}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.io.Source
 import scala.io.StdIn.readLine
 
@@ -309,14 +296,13 @@ object AppAnalyzer extends LogSupport {
     *   a list of MobileApp objects
     */
   private def filterAppsInFolder(
-      folderPath: String,
       appPaths: List[String],
       conf: Config,
       os: PlatformOS,
       filtering: Boolean,
       defaultAppName: Option[String]
   ): List[MobileApp] = {
-    val manifestFilePath = s"$folderPath/manifest.json"
+    val manifestFilePath = conf.manifestFile
     val manifest = MMap(readManifestFile(manifestFilePath).toList: _*)
     val inspector = os match {
       case Android        => APK(conf)
@@ -400,7 +386,7 @@ object AppAnalyzer extends LogSupport {
     val path = pargs.getValue[String]("path")
     val apps = device.PLATFORM_OS match {
       case Android =>
-        val (apks, folder) = if (new File(path).isDirectory) {
+        val (apks, _) = if (new File(path).isDirectory) {
           (
             new File(path)
               .listFiles()
@@ -418,7 +404,6 @@ object AppAnalyzer extends LogSupport {
           (List(path), new File(path).getParentFile.getPath)
         }
         filterAppsInFolder(
-          folder,
           apks,
           conf,
           Android,
@@ -426,7 +411,7 @@ object AppAnalyzer extends LogSupport {
           pargs.get[OptionalValue[String]]("defaultAppName").value
         )
       case PlatformOS.iOS =>
-        val (ipas, folder): (List[String], String) =
+        val (ipas, _): (List[String], String) =
           if (new File(path).isDirectory) {
             (
               new File(path)
@@ -445,7 +430,6 @@ object AppAnalyzer extends LogSupport {
             (List(path), new File(path).getParentFile.getPath)
           }
         filterAppsInFolder(
-          folder,
           ipas,
           conf,
           PlatformOS.iOS,
@@ -527,23 +511,8 @@ object AppAnalyzer extends LogSupport {
   private def runPluginExperiment(pargs: ParsingResult, conf: Config): Unit = {
     val pluginName = pargs.getValue[String]("plugin")
     val empty = pargs.getValue[Boolean]("empty")
-    val parameters: Map[String, String] =
-      pargs.get[OptionalValue[String]]("parameters").value match {
-        case Some(keyvaluecsv) =>
-          keyvaluecsv
-            .split(",")
-            .map { keyValue =>
-              keyValue.split("=").toList match {
-                case key :: value :: Nil => key -> value
-                case x =>
-                  throw new RuntimeException(
-                    s"element $keyValue of $keyvaluecsv has malformed split: $x"
-                  )
-              }
-            }
-            .toMap
-        case None => Map[String, String]()
-      }
+    val parameters: Map[String, String] = extract_parameters(pargs)
+
     val manager = PluginManager.getPluginManager(conf)
     runExperiment(
       manager.loadPlugin(pluginName, parameters),
@@ -696,6 +665,53 @@ object AppAnalyzer extends LogSupport {
     tryApiCommand("uninstallApp") {
       device.uninstallApp(appId)
       None
+    }
+  }
+
+  private def extract_parameters(pargs: ParsingResult): Map[String, String] = {
+    val parameters: Option[String] =
+      pargs.get[OptionalValue[String]]("parameters").value
+    parameters match {
+      case Some(keyvaluecsv) =>
+        if (is_filepath(keyvaluecsv)) {
+          val read_csv = Source.fromFile(keyvaluecsv)
+          try {
+            read_csv
+              .getLines()
+              .flatMap(line =>
+                line.split("=") match {
+                  case Array(key, value) => Some(key.trim -> value.trim)
+                  case _ => None
+                }
+              )
+              .toMap
+          } finally {
+            read_csv.close()
+          }
+        } else {
+          keyvaluecsv
+            .split(",")
+            .map { keyValue =>
+              keyValue.split("=").toList match {
+                case key :: value :: Nil => key -> value
+                case x =>
+                  throw new RuntimeException(
+                    s"element $keyValue of $keyvaluecsv has malformed split: $x"
+                  )
+              }
+            }
+            .toMap
+        }
+      case None => Map[String, String]()
+    }
+  }
+
+  private def is_filepath(str: String): Boolean = {
+    try {
+      Paths.get(str)
+      true
+    } catch {
+      case _: Exception => false
     }
   }
 }
