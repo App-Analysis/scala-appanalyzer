@@ -4,7 +4,6 @@
   "appium" : "appium",
   "appiumURLExtension" : "wd/hub/",
   "tmpFolder" : "/tmp/folder/",
-  "manifestFile": "/path/to/manifest.json",
   "mitm" : {
     "path" : "mitmdump",
     "addonScript" : "./resources/trafficCollection/mitm-addon.py"

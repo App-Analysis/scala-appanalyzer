@@ -86,8 +86,7 @@ case class Config(
     emulator: Option[Emulator],
     android: AndroidAnalysis,
     ios: iOS,
-    appiumURLExtension: String,
-    manifestFile: String
+    appiumURLExtension: String
 ) extends HasPluginManagerConfiguration {
 
   override def getPluginManagerConfiguration: PluginManagerConfiguration =
