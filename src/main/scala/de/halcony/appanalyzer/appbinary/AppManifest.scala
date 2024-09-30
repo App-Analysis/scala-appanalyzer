@@ -1,6 +1,6 @@
 package de.halcony.appanalyzer.appbinary
 
-import de.halcony.appanalyzer.AppAnalyzer.{error, info}
+import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.{Config, appbinary}
 import de.halcony.appanalyzer.platform.PlatformOS
 import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS, iOS}
@@ -19,9 +19,9 @@ import scala.util.{Failure, Success, Try}
 
 class AppManifest extends LogSupport {
 
-  private val manifest : MMap[String, MobileApp] = mutable.Map()
+  private val manifest: MMap[String, MobileApp] = mutable.Map()
 
-  def addApp(appId : String, app : MobileApp, force : Boolean = false) : Boolean = {
+  def addApp(appId: String, app: MobileApp, force: Boolean = false): Boolean = {
     if (!manifest.contains(appId) || force) {
       manifest.addOne(appId -> app)
       true
@@ -30,8 +30,8 @@ class AppManifest extends LogSupport {
     }
   }
 
-  def removeApp(appId : String) : Boolean = {
-    if(!manifest.contains(appId)) {
+  def removeApp(appId: String): Boolean = {
+    if (!manifest.contains(appId)) {
       warn(s"there is no app $appId in the manifest to be removed")
       true
     } else {
@@ -40,7 +40,7 @@ class AppManifest extends LogSupport {
     }
   }
 
-  def writeManifestFile(manifestFilePath : String) : Unit = {
+  def writeManifestFile(manifestFilePath: String): Unit = {
     val file = new FileWriter(new File(manifestFilePath))
     try {
       file.write(JsObject(this.getManifest.map { case (path, app) =>
@@ -57,63 +57,88 @@ class AppManifest extends LogSupport {
     }
   }
 
-  def getManifest : Map[String,MobileApp] = manifest.toMap
+  def getManifest: Map[String, MobileApp] = manifest.toMap
 
 }
 
 object AppManifest extends LogSupport {
 
-  val parser : Parser = Parser("manifest")
-    .addSubparser(Parser("update", "updates the manifest file for the provided app data collection")
-      .addDefault[(ParsingResult, Config) => Unit]("func",updateOrCreateManifestMain))
+  val parser: Parser = Parser("manifest")
+    .addSubparser(
+      Parser(
+        "update",
+        "updates the manifest file for the provided app data collection"
+      )
+        .addDefault[(ParsingResult, Config) => Unit](
+          "func",
+          updateOrCreateManifestMain
+        )
+    )
 
-  private def updateOrCreateManifestMain(pargs : ParsingResult, conf : Config) : Unit = {
-    val appFolder : String = pargs.getValue[String]("path")
-    val manifestFilePath = pargs.getValueOrElse[String]("manifest",appFolder + "/manifest.json")
-    val platform : PlatformOS = pargs.getValue[String]("platform") match {
-      case "android_device" | "android_device_non_root" | "android_emulator" => Android
+  private def updateOrCreateManifestMain(
+      pargs: ParsingResult,
+      conf: Config
+  ): Unit = {
+    val appFolder: String = pargs.getValue[String]("path")
+    val manifestFilePath =
+      pargs.getValueOrElse[String]("manifest", appFolder + "/manifest.json")
+    val platform: PlatformOS = pargs.getValue[String]("platform") match {
+      case "android_device" | "android_device_non_root" | "android_emulator" =>
+        Android
       case "ios" => iOS
-      case x => throw new RuntimeException(s"the mobile operating system $x is unknown and not supported")
+      case x =>
+        throw new RuntimeException(
+          s"the mobile operating system $x is unknown and not supported"
+        )
     }
-    AppManifest(appFolder, manifestFilePath, platform, update = true).writeManifestFile(manifestFilePath)
+    AppManifest(appFolder, manifestFilePath, platform, update = true)(conf)
+      .writeManifestFile(manifestFilePath)
   }
 
-  def readInFolder(path  : String, device : PlatformOS) : List[MobileApp] = {
+  private def readInFolder(path: String, device: PlatformOS)(implicit
+      conf: Config
+  ): List[MobileApp] = {
     val future = Future.sequence {
-      getApps(path, device).map {
-        appBinaryPath => Future { anlyzeAppBinary(appBinaryPath, device) }
+      getApps(path, device).map { appBinaryPath =>
+        Future { anlyzeAppBinary(appBinaryPath, device)(conf) }
       }
     }
-    Await.result(future,Inf).filter {
-      case Failure(exception) =>
-        error(exception.getMessage)
-        false
-      case Success(_) =>
-        true
-    }.map(_.get)
+    Await
+      .result(future, Inf)
+      .filter {
+        case Failure(exception) =>
+          error(exception.getMessage)
+          false
+        case Success(_) =>
+          true
+      }
+      .map(_.get)
   }
 
-  def anlyzeAppBinary(path : String, device : PlatformOS) : Try[MobileApp] = {
+  private def anlyzeAppBinary(path: String, device: PlatformOS)(implicit
+      conf: Config
+  ): Try[MobileApp] = {
     device match {
+      case iOS =>
+        throw new NotImplementedError() // todo: at some point we might want to do iOS again
       case Android => analyzeApk(path)
-      case iOS => throw new NotImplementedError() //todo: at some point we might want to do iOS again
     }
   }
 
-  protected def analyzeApk(path : String) : Try[MobileApp] = {
+  protected def analyzeApk(
+      path: String
+  )(implicit conf: Config): Try[MobileApp] = {
     try {
-      val id : String = ???
-      val version  : String = ???
+      val id: String = APK(conf).getAppId(path)
+      val version: String = APK(conf).getAppVersion(path)
       Success(MobileApp(id, version, Android, path))
     } catch {
-      case x : Throwable => Failure(x)
+      case x: Throwable => Failure(x)
     }
   }
 
-
-
-  protected def getApps(path : String, device : PlatformOS) : List[String] = {
-    def getFilesOrFileEndingWith(path : String, suffix : String) : List[String] = {
+  protected def getApps(path: String, device: PlatformOS): List[String] = {
+    def getFilesOrFileEndingWith(path: String, suffix: String): List[String] = {
       if (new File(path).isDirectory) {
         new File(path)
           .listFiles()
@@ -122,20 +147,22 @@ object AppManifest extends LogSupport {
           .map(_.getPath)
           .toList
       } else {
-        if(!path.endsWith(suffix)) {
-          throw new RuntimeException(s"if you do not provide a folder of files the file needs to end with '$suffix'")
+        if (!path.endsWith(suffix)) {
+          throw new RuntimeException(
+            s"if you do not provide a folder of files the file needs to end with '$suffix'"
+          )
         } else {
           List(path)
         }
       }
     }
     device match {
-      case Android => getFilesOrFileEndingWith(path,".apk")
-      case iOS => getFilesOrFileEndingWith(path,".ipa")
+      case Android => getFilesOrFileEndingWith(path, ".apk")
+      case iOS     => getFilesOrFileEndingWith(path, ".ipa")
     }
   }
 
-  private def readManifest(manifestFilePath : String) : Map[String, MobileApp] = {
+  private def readManifest(manifestFilePath: String): Map[String, MobileApp] = {
     if (new File(manifestFilePath).exists) {
       info("detected app manifest")
       val source = Source.fromFile(manifestFilePath)
@@ -171,20 +198,35 @@ object AppManifest extends LogSupport {
     }
   }
 
-  def apply(appFolderPath : String, platform : PlatformOS, update : Boolean) : AppManifest = {
-    AppManifest(appFolderPath, appFolderPath + "manifest.json", platform, update)
+  def apply(appFolderPath: String, platform: PlatformOS, update: Boolean)(
+      implicit conf: Config
+  ): AppManifest = {
+    AppManifest(
+      appFolderPath,
+      appFolderPath + "manifest.json",
+      platform,
+      update
+    )
   }
 
-  def apply(appFolderPath : String, manifestFilePath : String, platform : PlatformOS, update : Boolean) : AppManifest = {
+  def apply(
+      appFolderPath: String,
+      manifestFilePath: String,
+      platform: PlatformOS,
+      update: Boolean
+  )(implicit conf: Config): AppManifest = {
     val manifest = new AppManifest()
-    readManifest(manifestFilePath).foreach{case (name,app) => manifest.addApp(name, app)}
-    if(manifest.getManifest.isEmpty || update) {
-      val contained = readInFolder(appFolderPath, platform).map {
-        app =>
-          manifest.addApp(app.id, app)
-          app.id
+    readManifest(manifestFilePath).foreach { case (name, app) =>
+      manifest.addApp(name, app)
+    }
+    if (manifest.getManifest.isEmpty || update) {
+      val contained = readInFolder(appFolderPath, platform).map { app =>
+        manifest.addApp(app.id, app)
+        app.id
       }
-      manifest.getManifest.keySet.filterNot(contained.contains).foreach(manifest.removeApp)
+      manifest.getManifest.keySet
+        .filterNot(contained.contains)
+        .foreach(manifest.removeApp)
     }
     manifest
   }
