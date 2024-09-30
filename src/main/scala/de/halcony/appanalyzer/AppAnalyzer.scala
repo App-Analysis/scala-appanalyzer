@@ -4,26 +4,28 @@ import com.mchange.v3.concurrent.BoundedExecutorService
 import de.halcony.appanalyzer.analysis.Analysis
 import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
 import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
-import de.halcony.appanalyzer.appbinary.apk.APK
-import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
-import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
+import de.halcony.appanalyzer.platform.device.{
+  AndroidDeviceNonRoot,
+  AndroidEmulatorRoot,
+  Device
+}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOS, device}
-import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
+import de.halcony.argparse.{
+  OptionalValue,
+  Parser,
+  ParsingException,
+  ParsingResult
+}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
-import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
 
-import java.io.{File, FileWriter}
+import java.io.File
 import java.nio.file.Paths
 import java.util.concurrent.Executors
-import scala.collection.immutable
-import scala.collection.mutable.{Map => MMap}
-import scala.concurrent.duration.Duration.Inf
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.io.Source
 import scala.io.StdIn.readLine
 
@@ -37,7 +39,7 @@ object AppAnalyzer extends LogSupport {
   private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(executorService)
 
-  val parser: Parser = Parser(
+  private val parser: Parser = Parser(
     "AppAnalyzer",
     "run apps and analyze their consent dialogs"
   )
@@ -73,7 +75,13 @@ object AppAnalyzer extends LogSupport {
           "path",
           "path to the required data for the chosen action"
         )
-        .addOptional("manifest","m","manifest",None,"the path to the manifest to be used for this run")
+        .addOptional(
+          "manifest",
+          "m",
+          "manifest",
+          None,
+          "the path to the manifest to be used for this run"
+        )
         .addSubparser(AppManifest.parser)
         .addSubparser(
           Parser(
@@ -232,16 +240,27 @@ object AppAnalyzer extends LogSupport {
   /** filters the apps contained in the folder by already analyzed apps and
     * creates MobileApp objects
     *
-    * @param manifest : the read manifest file that shall be filtered against the already analyzed apps
-    * @param filtering: whether filtering is supposed to happen (if no all apps from the manifest are used)
-    * @return a list of MobileApp objects
+    * @param manifest
+    *   : the read manifest file that shall be filtered against the already
+    *   analyzed apps
+    * @param filtering:
+    *   whether filtering is supposed to happen (if no all apps from the
+    *   manifest are used)
+    * @return
+    *   a list of MobileApp objects
     */
-  private def filterAppsInFolder(manifest : AppManifest, filtering : Boolean): List[MobileApp] = {
+  private def filterAppsInFolder(
+      manifest: AppManifest,
+      filtering: Boolean
+  ): List[MobileApp] = {
     val alreadyChecked: Set[String] =
       if (filtering) Experiment.getAnalyzedApps.map(_.id).toSet else Set()
-    manifest.getManifest.filter {
-      case (key, _) => !alreadyChecked.contains(key)
-    }.values.toList
+    manifest.getManifest
+      .filter { case (key, _) =>
+        !alreadyChecked.contains(key)
+      }
+      .values
+      .toList
   }
 
   private def getOnlyApps(only: Option[String]): Option[Set[String]] = {
@@ -281,9 +300,19 @@ object AppAnalyzer extends LogSupport {
   ): List[MobileApp] = {
     val path = pargs.getValue[String]("path")
     val manifest = pargs.get[OptionalValue[String]]("manifest").value match {
-      case Some(manifestPath) => AppManifest(manifestPath, device.PLATFORM_OS, update = false)
-      case None => AppManifest(path + "/manifest.json", device.PLATFORM_OS, update = false)
+      case Some(manifestPath) =>
+        AppManifest(manifestPath, device.PLATFORM_OS, update = false)(conf)
+      case None =>
+        AppManifest(
+          path + "/manifest.json",
+          device.PLATFORM_OS,
+          update = false
+        )(conf)
     }
+    if (manifest.getManifest.isEmpty)
+      warn(
+        "the manifest appears to be empty - either your folder is empty or you have not created the manifest yet"
+      )
     val apps = filterAppsInFolder(manifest, filtering)
     val appSubset = apps.slice(0, getBatchSize(pargs).getOrElse(apps.length))
     getOnlyApps(pargs.get[OptionalValue[String]]("only").value) match {
@@ -528,7 +557,7 @@ object AppAnalyzer extends LogSupport {
               .flatMap(line =>
                 line.split("=") match {
                   case Array(key, value) => Some(key.trim -> value.trim)
-                  case _ => None
+                  case _                 => None
                 }
               )
               .toMap
