@@ -123,7 +123,7 @@ object Config extends DefaultJsonProtocol {
   implicit val emulatorFormat: RootJsonFormat[Emulator] =
     jsonFormat5(Emulator)
 
-  implicit val configFormat: RootJsonFormat[Config] = jsonFormat13(Config.apply)
+  implicit val configFormat: RootJsonFormat[Config] = jsonFormat12(Config.apply)
 
   /** given a file path parses the configuration file
     *
