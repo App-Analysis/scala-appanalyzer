@@ -60,4 +60,9 @@ case class IPA(conf: Config) extends Analysis with LogSupport {
       }
     }
   }
+
+  override def getAppId(path: String): String = throw new NotImplementedError()
+
+  override def getAppVersion(path: String): String =
+    throw new NotImplementedError()
 }
