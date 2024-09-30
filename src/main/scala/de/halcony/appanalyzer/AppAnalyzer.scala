@@ -3,7 +3,7 @@ package de.halcony.appanalyzer
 import com.mchange.v3.concurrent.BoundedExecutorService
 import de.halcony.appanalyzer.analysis.Analysis
 import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
-import de.halcony.appanalyzer.appbinary.MobileApp
+import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.database.Postgres
@@ -20,6 +20,7 @@ import wvlet.log.LogSupport
 import java.io.{File, FileWriter}
 import java.nio.file.Paths
 import java.util.concurrent.Executors
+import scala.collection.immutable
 import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.duration.Duration.Inf
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
@@ -72,7 +73,8 @@ object AppAnalyzer extends LogSupport {
           "path",
           "path to the required data for the chosen action"
         )
-        .addOptional("defaultAppName", "d", "defaultAppName")
+        .addOptional("manifest","m","manifest",None,"the path to the manifest to be used for this run")
+        .addSubparser(AppManifest.parser)
         .addSubparser(
           Parser(
             "functionalityCheck",
@@ -227,125 +229,19 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
-  private def readManifestFile(path: String): Map[String, MobileApp] = {
-    if (new File(path).exists) {
-      info("detected app manifest")
-      val source = Source.fromFile(path)
-      try {
-        JsonParser(source.getLines().mkString("\n"))
-          .asInstanceOf[JsObject]
-          .fields
-          .map {
-            case (path: String, app: JsObject) =>
-              path -> appbinary.MobileApp(
-                app.fields("id").asInstanceOf[JsString].value,
-                app.fields("version").asInstanceOf[JsString].value,
-                app
-                  .fields("os")
-                  .asInstanceOf[JsString]
-                  .value
-                  .toLowerCase match {
-                  case "android" => PlatformOS.Android
-                  case "ios"     => PlatformOS.iOS
-                },
-                app.fields("path").asInstanceOf[JsString].value
-              )
-            case _ =>
-              error("manifest seems broken")
-              "NO" -> appbinary.MobileApp("NO", "NO", Android, "NO")
-          }
-          .filter { case (path, _) => path != "NO" }
-      } finally {
-        source.close()
-      }
-    } else {
-      Map()
-    }
-  }
-
-  private def writeManifestFile(
-      path: String,
-      apps: Map[String, MobileApp]
-  ): Unit = {
-    val file = new FileWriter(new File(path))
-    try {
-      file.write(JsObject(apps.map { case (path, app) =>
-        path -> JsObject(
-          "id" -> JsString(app.id),
-          "version" -> JsString(app.version),
-          "os" -> JsString(app.getOsString),
-          "path" -> JsString(app.serializedPath)
-        )
-      }).prettyPrint)
-    } finally {
-      file.flush()
-      file.close()
-    }
-  }
-
   /** filters the apps contained in the folder by already analyzed apps and
     * creates MobileApp objects
     *
-    * @param appPaths
-    *   the paths to all the relevant app packages
-    * @param conf
-    *   the configuration
-    * @param os
-    *   the operating system for which the apps are
-    * @return
-    *   a list of MobileApp objects
+    * @param manifest : the read manifest file that shall be filtered against the already analyzed apps
+    * @param filtering: whether filtering is supposed to happen (if no all apps from the manifest are used)
+    * @return a list of MobileApp objects
     */
-  private def filterAppsInFolder(
-      appPaths: List[String],
-      conf: Config,
-      os: PlatformOS,
-      filtering: Boolean,
-      defaultAppName: Option[String]
-  ): List[MobileApp] = {
-    val manifestFilePath = conf.manifestFile
-    val manifest = MMap(readManifestFile(manifestFilePath).toList: _*)
-    val inspector = os match {
-      case Android        => APK(conf)
-      case PlatformOS.iOS => IPA(conf)
-    }
+  private def filterAppsInFolder(manifest : AppManifest, filtering : Boolean): List[MobileApp] = {
     val alreadyChecked: Set[String] =
       if (filtering) Experiment.getAnalyzedApps.map(_.id).toSet else Set()
-    val appFuture = Future.sequence {
-      appPaths.map { path =>
-        Future {
-          try {
-            val app = manifest.synchronized(manifest.get(path)) match {
-              case Some(app) => app
-              case None =>
-                warn(s"app $path not contained in the manifest.json")
-                val app = appbinary.MobileApp(
-                  inspector.getAppId(
-                    appbinary.MobileApp("", "", os, path),
-                    defaultAppName
-                  ),
-                  "NA",
-                  os,
-                  path
-                )
-                manifest.synchronized(manifest.addOne(path -> app))
-                app
-            }
-            if (alreadyChecked.contains(app.id)) {
-              None
-            } else {
-              Some(app)
-            }
-          } catch {
-            case x: Throwable =>
-              error(x.getMessage)
-              None
-          }
-        }
-      }
-    }
-    val ret = Await.result(appFuture, Inf).filter(_.nonEmpty).map(_.get)
-    writeManifestFile(manifestFilePath, manifest.toMap)
-    ret
+    manifest.getManifest.filter {
+      case (key, _) => !alreadyChecked.contains(key)
+    }.values.toList
   }
 
   private def getOnlyApps(only: Option[String]): Option[Set[String]] = {
@@ -384,60 +280,11 @@ object AppAnalyzer extends LogSupport {
       filtering: Boolean = true
   ): List[MobileApp] = {
     val path = pargs.getValue[String]("path")
-    val apps = device.PLATFORM_OS match {
-      case Android =>
-        val (apks, _) = if (new File(path).isDirectory) {
-          (
-            new File(path)
-              .listFiles()
-              .filter(_.isFile)
-              .filter(_.getPath.endsWith(".apk"))
-              .map(_.getPath)
-              .toList,
-            path
-          )
-        } else {
-          assert(
-            path.endsWith(".apk"),
-            s"path has to end with apk if not a directory in $path"
-          )
-          (List(path), new File(path).getParentFile.getPath)
-        }
-        filterAppsInFolder(
-          apks,
-          conf,
-          Android,
-          filtering,
-          pargs.get[OptionalValue[String]]("defaultAppName").value
-        )
-      case PlatformOS.iOS =>
-        val (ipas, _): (List[String], String) =
-          if (new File(path).isDirectory) {
-            (
-              new File(path)
-                .listFiles()
-                .filter(_.isFile)
-                .filter(_.getPath.endsWith(".ipa"))
-                .map(_.getPath)
-                .toList,
-              path
-            )
-          } else {
-            assert(
-              path.endsWith(".ipa"),
-              s"path has to end with ipa if not a directory in $path"
-            )
-            (List(path), new File(path).getParentFile.getPath)
-          }
-        filterAppsInFolder(
-          ipas,
-          conf,
-          PlatformOS.iOS,
-          filtering,
-          pargs.get[OptionalValue[String]]("defaultAppName").value
-        )
-
+    val manifest = pargs.get[OptionalValue[String]]("manifest").value match {
+      case Some(manifestPath) => AppManifest(manifestPath, device.PLATFORM_OS, update = false)
+      case None => AppManifest(path + "/manifest.json", device.PLATFORM_OS, update = false)
     }
+    val apps = filterAppsInFolder(manifest, filtering)
     val appSubset = apps.slice(0, getBatchSize(pargs).getOrElse(apps.length))
     getOnlyApps(pargs.get[OptionalValue[String]]("only").value) match {
       case Some(filterList) =>
