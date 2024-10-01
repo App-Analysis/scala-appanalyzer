@@ -1,7 +1,7 @@
 package de.halcony.appanalyzer.platform.frida
 
-import de.halcony.appanalyzer.platform.PlatformOS
-import PlatformOS.PlatformOS
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems
+import PlatformOperatingSystems.PlatformOS
 import de.halcony
 
 trait FridaScripts {
@@ -13,9 +13,9 @@ trait FridaScripts {
 object FridaScripts {
 
   def platform(platform: PlatformOS): FridaScripts = platform match {
-    case PlatformOS.Android =>
+    case PlatformOperatingSystems.ANDROID =>
       AndroidFridaScripts
-    case halcony.appanalyzer.platform.PlatformOS.iOS =>
+    case halcony.appanalyzer.platform.PlatformOperatingSystems.IOS =>
       iOSFridaScripts
   }
 

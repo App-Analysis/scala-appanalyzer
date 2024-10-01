@@ -2,8 +2,8 @@ package de.halcony.appanalyzer.appbinary
 
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.{Config, appbinary}
-import de.halcony.appanalyzer.platform.PlatformOS
-import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS, iOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS, IOS}
 import de.halcony.argparse.{Parser, ParsingResult}
 import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
@@ -84,13 +84,14 @@ object AppManifest extends LogSupport {
       pargs.getValueOrElse[String]("manifest", appFolder + "/manifest.json")
     val platform: PlatformOS = pargs.getValue[String]("platform") match {
       case "android_device" | "android_device_non_root" | "android_emulator" =>
-        Android
-      case "ios" => iOS
+        ANDROID
+      case "ios" => IOS
       case x =>
         throw new RuntimeException(
           s"the mobile operating system $x is unknown and not supported"
         )
     }
+    info(s"creating manifest file $manifestFilePath for $appFolder")
     AppManifest(appFolder, manifestFilePath, platform, update = true)(conf)
       .writeManifestFile(manifestFilePath)
   }
@@ -98,8 +99,10 @@ object AppManifest extends LogSupport {
   private def readInFolder(path: String, device: PlatformOS)(implicit
       conf: Config
   ): List[MobileApp] = {
+    val appPaths = getApps(path,device)
+    info(s"we detected ${appPaths.length} app files in the provided folder")
     val future = Future.sequence {
-      getApps(path, device).map { appBinaryPath =>
+      appPaths.map { appBinaryPath =>
         Future { anlyzeAppBinary(appBinaryPath, device)(conf) }
       }
     }
@@ -115,13 +118,13 @@ object AppManifest extends LogSupport {
       .map(_.get)
   }
 
-  private def anlyzeAppBinary(path: String, device: PlatformOS)(implicit
+  private def anlyzeAppBinary(path: String, device: PlatformOperatingSystems.PlatformOS)(implicit
       conf: Config
   ): Try[MobileApp] = {
     device match {
-      case iOS =>
-        throw new NotImplementedError() // todo: at some point we might want to do iOS again
-      case Android => analyzeApk(path)
+      case PlatformOperatingSystems.IOS =>
+        Failure(new NotImplementedError()) // todo: at some point we might want to do iOS again
+      case PlatformOperatingSystems.ANDROID => analyzeApk(path)
     }
   }
 
@@ -131,7 +134,7 @@ object AppManifest extends LogSupport {
     try {
       val id: String = APK(conf).getAppId(path)
       val version: String = APK(conf).getAppVersion(path)
-      Success(MobileApp(id, version, Android, path))
+      Success(MobileApp(id, version, ANDROID, path))
     } catch {
       case x: Throwable => Failure(x)
     }
@@ -157,8 +160,8 @@ object AppManifest extends LogSupport {
       }
     }
     device match {
-      case Android => getFilesOrFileEndingWith(path, ".apk")
-      case iOS     => getFilesOrFileEndingWith(path, ".ipa")
+      case ANDROID => getFilesOrFileEndingWith(path, ".apk")
+      case IOS     => getFilesOrFileEndingWith(path, ".ipa")
     }
   }
 
@@ -180,14 +183,14 @@ object AppManifest extends LogSupport {
                   .asInstanceOf[JsString]
                   .value
                   .toLowerCase match {
-                  case "android" => PlatformOS.Android
-                  case "ios"     => PlatformOS.iOS
+                  case "android" => PlatformOperatingSystems.ANDROID
+                  case "ios"     => PlatformOperatingSystems.IOS
                 },
                 app.fields("path").asInstanceOf[JsString].value
               )
             case _ =>
               error("manifest seems broken")
-              "NO" -> appbinary.MobileApp("NO", "NO", Android, "NO")
+              "NO" -> appbinary.MobileApp("NO", "NO", ANDROID, "NO")
           }
           .filter { case (path, _) => path != "NO" }
       } finally {
@@ -203,11 +206,13 @@ object AppManifest extends LogSupport {
   ): AppManifest = {
     AppManifest(
       appFolderPath,
-      appFolderPath + "manifest.json",
+      appFolderPath + "/manifest.json",
       platform,
       update
     )
   }
+
+  //todo we need to include the path to the app folder in the manifest to ensure that we do not use the wrong manifest for an app set
 
   def apply(
       appFolderPath: String,
@@ -220,7 +225,12 @@ object AppManifest extends LogSupport {
       manifest.addApp(name, app)
     }
     if (manifest.getManifest.isEmpty || update) {
+      if(manifest.getManifest.isEmpty)
+        info("the manifest was empty, running update based on app folder")
+      else
+        info("we force an update based on the app folder")
       val contained = readInFolder(appFolderPath, platform).map { app =>
+        info(s"adding app ${app.id}")
         manifest.addApp(app.id, app)
         app.id
       }

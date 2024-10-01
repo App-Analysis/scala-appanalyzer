@@ -2,7 +2,7 @@ package de.halcony.appanalyzer.platform.appium
 
 import de.halcony.appanalyzer
 import de.halcony.appanalyzer.Config
-import de.halcony.appanalyzer.platform.PlatformOS
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems
 import de.halcony.appanalyzer.platform.device.Device
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import io.appium.java_client.AppiumDriver
@@ -189,13 +189,13 @@ object Appium extends LogSupport {
       func: Appium => T
   ): T = {
     val appium: Appium = device.PLATFORM_OS match {
-      case PlatformOS.Android =>
+      case PlatformOperatingSystems.ANDROID =>
         if (conf.android.appium) {
           new AndroidAppium(conf)
         } else {
           new NoAppium()
         }
-      case appanalyzer.platform.PlatformOS.iOS =>
+      case appanalyzer.platform.PlatformOperatingSystems.IOS =>
         if (conf.ios.appium) {
           new iOSAppium(conf)
         } else {
@@ -210,7 +210,7 @@ object Appium extends LogSupport {
         case x: Throwable =>
           error(s"encountered appium start error:\n ${x.getMessage}")
           device.PLATFORM_OS match {
-            case appanalyzer.platform.PlatformOS.Android =>
+            case appanalyzer.platform.PlatformOperatingSystems.ANDROID =>
               info("restarting the device and performing reconnect")
               appium.stopAppiumServer()
               device.restartPhone()
@@ -222,7 +222,7 @@ object Appium extends LogSupport {
                   error(s"restart did not help:\n ${x.getMessage}")
                   throw new FatalError("Appium did not start successfully")
               }
-            case appanalyzer.platform.PlatformOS.iOS =>
+            case appanalyzer.platform.PlatformOperatingSystems.IOS =>
               throw new FatalError("Appium did not start successfully")
           }
       }

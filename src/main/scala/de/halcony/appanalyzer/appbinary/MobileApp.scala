@@ -1,8 +1,8 @@
 package de.halcony.appanalyzer.appbinary
 
 import de.halcony.appanalyzer.database.Postgres
-import de.halcony.appanalyzer.platform.PlatformOS
-import PlatformOS.{Android, PlatformOS, iOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems
+import PlatformOperatingSystems.{ANDROID, PlatformOS, IOS}
 import de.halcony.appanalyzer
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
@@ -22,8 +22,8 @@ case class MobileApp(
     *   the os as a string
     */
   def getOsString: String = os match {
-    case PlatformOS.Android                  => "android"
-    case appanalyzer.platform.PlatformOS.iOS => "ios"
+    case PlatformOperatingSystems.ANDROID                  => "android"
+    case appanalyzer.platform.PlatformOperatingSystems.IOS => "ios"
   }
 
   /** insert the app into the connected database
@@ -69,8 +69,8 @@ object MobileApp {
     */
   def stringToOsEnum(os: String): PlatformOS = {
     os match {
-      case "android" => Android
-      case "ios"     => iOS
+      case "android" => ANDROID
+      case "ios"     => IOS
     }
   }
 

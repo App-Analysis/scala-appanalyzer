@@ -3,7 +3,7 @@ package de.halcony.appanalyzer.platform.device
 import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
-import de.halcony.appanalyzer.platform.PlatformOS.PlatformOS
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.PlatformOS
 import spray.json.{
   DefaultJsonProtocol,
   JsObject,

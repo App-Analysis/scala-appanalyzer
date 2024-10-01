@@ -14,7 +14,7 @@ import de.halcony.appanalyzer.analysis.trafficcollection.TrafficCollection
 import de.halcony.appanalyzer.appbinary.MobileApp
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.{Config, Experiment, platform}
-import de.halcony.appanalyzer.platform.PlatformOS
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems
 import de.halcony.appanalyzer.platform.appium.{Appium, NoAppium, iOSAppium}
 import de.halcony.appanalyzer.platform.device.Device
 import de.halcony.appanalyzer.platform.exceptions.{
@@ -207,14 +207,14 @@ class Analysis(
       device: Device
   ): Interface = {
     device.PLATFORM_OS match {
-      case PlatformOS.Android =>
+      case PlatformOperatingSystems.ANDROID =>
         interaction.Interface(
           this,
           appium,
           flat = !collectInterfaceElements,
           interfaceComment
         ) // nothing to do here
-      case platform.PlatformOS.iOS =>
+      case platform.PlatformOperatingSystems.IOS =>
         // we have to make sure that we have appium access prior to removing any alerts
         if (
           !appium.isInstanceOf[NoAppium] && appium

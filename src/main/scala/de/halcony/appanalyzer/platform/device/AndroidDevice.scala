@@ -4,7 +4,7 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.FridaScripts
-import de.halcony.appanalyzer.platform.PlatformOS.{Android, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
 import de.halcony.appanalyzer.platform.exceptions.{
   AppClosedItself,
   FatalError,
@@ -49,7 +49,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     * 1 generic failure 20 means that a service has not been found (i.e.,
     * settings, package) - restart is required
     */
-  override val PLATFORM_OS: PlatformOS = Android
+  override val PLATFORM_OS: PlatformOS = ANDROID
   override val EMULATOR: Boolean = false
   override val ROOT: Boolean = true
 
@@ -335,7 +335,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
         case x: Throwable =>
           if (uninstallProcess.isAlive()) uninstallProcess.destroy()
           throw UnableToUninstallApp(
-            MobileApp(appId, "NA", Android, "NA"),
+            MobileApp(appId, "NA", ANDROID, "NA"),
             s"adb returned $ret\n${x.getMessage}\nSTDIO\n${stdio
                 .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
           )
@@ -346,7 +346,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       case x =>
         error(s"final adb uninstall try resulted in ret code $x")
         throw UnableToUninstallApp(
-          MobileApp(appId, "NA", Android, "NA"),
+          MobileApp(appId, "NA", ANDROID, "NA"),
           s"adb returned $ret\nSTDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
         )
     }

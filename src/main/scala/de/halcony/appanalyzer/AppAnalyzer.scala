@@ -12,7 +12,7 @@ import de.halcony.appanalyzer.platform.device.{
   Device
 }
 import de.halcony.appanalyzer.platform.exceptions.FatalError
-import de.halcony.appanalyzer.platform.{PlatformOS, device}
+import de.halcony.appanalyzer.platform.{PlatformOperatingSystems, device}
 import de.halcony.argparse.{
   OptionalValue,
   Parser,
@@ -472,7 +472,7 @@ object AppAnalyzer extends LogSupport {
       None
     }
 
-    val app = appbinary.MobileApp("", "", PlatformOS.iOS, path)
+    val app = appbinary.MobileApp("", "", PlatformOperatingSystems.IOS, path)
 
     tryApiCommand("appPackageAnalysis.getAppId") {
       Some(device.getAppPackageAnalysis(conf).getAppId(app, None))

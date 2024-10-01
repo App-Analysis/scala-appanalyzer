@@ -4,7 +4,7 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.{FridaScripts, iOSFridaScripts}
-import de.halcony.appanalyzer.platform.PlatformOS.{PlatformOS, iOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{PlatformOS, IOS}
 import de.halcony.appanalyzer.platform.exceptions.{
   AppClosedItself,
   UnableToInstallApp,
@@ -18,7 +18,7 @@ import scala.sys.process._
 
 case class iOSDevice(conf: Config) extends Device with LogSupport {
 
-  override val PLATFORM_OS: PlatformOS = iOS
+  override val PLATFORM_OS: PlatformOS = IOS
   override val EMULATOR: Boolean = false
   override val ROOT: Boolean = true
 
@@ -129,7 +129,7 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     } catch {
       case x: RuntimeException =>
         throw UnableToUninstallApp(
-          MobileApp(appId, "NA", iOS, "NA"),
+          MobileApp(appId, "NA", IOS, "NA"),
           x.getMessage
         )
     }
