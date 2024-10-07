@@ -583,11 +583,6 @@ object AppAnalyzer extends LogSupport {
   }
 
   private def is_filepath(str: String): Boolean = {
-    try {
-      Paths.get(str)
-      true
-    } catch {
-      case _: Exception => false
-    }
+    new File(str).exists()
   }
 }
