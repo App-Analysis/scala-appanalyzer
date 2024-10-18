@@ -13,6 +13,7 @@ class Mailer(email_config: Email) extends LogSupport {
 
   val user: String = email_config.user
   val password: String = email_config.password
+  val recipients: List[String] = email_config.recipients
 
   val properties = new Properties
   properties.put("mail.smtp.port", port)
@@ -23,7 +24,7 @@ class Mailer(email_config: Email) extends LogSupport {
   // properties.setProperty("mail.password", password)
   properties.setProperty("mail.smtp.auth", "true")
 
-  def send_email(recipient: String, subject: String, content: String): Unit = {
+  def send_email(subject: String, content: String): Unit = {
     val session = Session.getInstance(properties, new Authenticator() {
       override def getPasswordAuthentication: PasswordAuthentication = {
         new PasswordAuthentication(user, password)
@@ -31,9 +32,12 @@ class Mailer(email_config: Email) extends LogSupport {
     })
     val message = new MimeMessage(session)
     message.setFrom(new InternetAddress(user))
-    message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient))
     message.setSubject(subject)
     message.setText(content)
+
+    for (recipient <- recipients) {
+      message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient))
+    }
     Transport.send(message)
   }
 

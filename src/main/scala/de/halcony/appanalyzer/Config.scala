@@ -78,7 +78,8 @@ case class Email(
     host: String,
     user: String,
     password: String,
-    port: Int
+    port: Int,
+    recipients: List[String]
 )
 
 case class Config(
@@ -90,7 +91,7 @@ case class Config(
     plugin: PluginManagerConfiguration,
     db: Database,
     devicePrep: DevicePreparation,
-    email: Email,
+    email: Option[Email],
     emulator: Option[Emulator],
     android: AndroidAnalysis,
     ios: iOS,
@@ -128,7 +129,7 @@ object Config extends DefaultJsonProtocol {
       : RootJsonFormat[PluginManagerConfiguration] =
     jsonFormat2(PluginManagerConfiguration)
 
-  implicit val emailFormat: RootJsonFormat[Email] = jsonFormat4(Email)
+  implicit val emailFormat: RootJsonFormat[Email] = jsonFormat5(Email)
 
   implicit val emulatorFormat: RootJsonFormat[Emulator] =
     jsonFormat5(Emulator)
