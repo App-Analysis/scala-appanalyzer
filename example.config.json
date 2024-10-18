@@ -17,6 +17,12 @@
         }
       }
   },
+  "email": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "",
+    "password": ""
+  },
   "emulator" : {
     "emulator" : "/path/to/emulator",
     "avd" : "name-of-avd",
