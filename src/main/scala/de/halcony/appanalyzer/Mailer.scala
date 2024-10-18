@@ -8,7 +8,7 @@ import javax.mail.internet._
 
 class Mailer(email_config: Email) extends LogSupport {
 
-  val port: String = email_config.port
+  val port: String = email_config.port.toString
   val host: String = email_config.host
 
   val user: String = email_config.user

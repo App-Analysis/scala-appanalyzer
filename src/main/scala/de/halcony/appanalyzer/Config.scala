@@ -78,7 +78,7 @@ case class Email(
     host: String,
     user: String,
     password: String,
-    port: String
+    port: Int
 )
 
 case class Config(
