@@ -21,7 +21,8 @@
     "host": "smtp.gmail.com",
     "port": 587,
     "user": "",
-    "password": ""
+    "password": "",
+    "recipients": ["email1", "email2"]
   },
   "emulator" : {
     "emulator" : "/path/to/emulator",
