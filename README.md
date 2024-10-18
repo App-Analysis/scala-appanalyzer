@@ -19,7 +19,7 @@ to enable a wide range of functions.
 | [sbt](https://www.scala-sbt.org/download.html)                       | via package manager          |
 | [Postgres](https://www.postgresql.org/)                              | via package manager          |
 | [AndroidStudio with CLI-tools](https://developer.android.com/studio) | via tar                      |
-| [libimobiledevice](https://libimobiledevice.org/) | via package manager |
+| [libimobiledevice](https://libimobiledevice.org/)                    | via package manager          |
 
 You might have to install atob as well via ```npm i -g atob```.
 CommandLine tools can be installed in Android Studio under ```Settings -> SDK -> SDK Tools```.
