@@ -42,7 +42,11 @@ class TestConfig extends AnyFlatSpec with should.Matchers {
       case Some(email) =>
         email.host should be("smtp.gmail.com")
         email.port should be(587)
-        email.user should be("")
+        email.user should be("ad\\exchange")
+        email.email match {
+          case Some(email: String) => email should be("exchange@optional.org")
+          case None => print("email is optional, in this case None")
+        }
         email.password should be("")
       case None => print("email is optional, in this case None")
     }

@@ -20,7 +20,8 @@
   "email": {
     "host": "smtp.gmail.com",
     "port": 587,
-    "user": "",
+    "user": "ad\\exchange",
+    "email": "exchange@optional.org",
     "password": "",
     "recipients": ["email1", "email2"]
   },
