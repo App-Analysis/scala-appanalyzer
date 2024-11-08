@@ -9,3 +9,13 @@ config.json
 /plugins/*
 /resources/trafficCollection/__pycache__/
 !/plugins/.gitkeep
+
+
+# vscode
+.vscode
+
+# python venv
+.venv
+
+# params, secret!
+params.lst
