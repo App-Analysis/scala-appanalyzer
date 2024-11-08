@@ -17,9 +17,13 @@ class Mailer(email_config: Email) extends LogSupport {
 
   val properties = new Properties
   properties.put("mail.smtp.port", port)
-  properties.setProperty("mail.transport.protocol", "smtp")
-  properties.setProperty("mail.smtp.starttls.enable", "true")
   properties.setProperty("mail.host", host)
+
+  properties.setProperty("mail.smtp.starttls.enable", "true")
+  properties.setProperty("mail.transport.protocol", "smtp")
+  properties.setProperty("mail.smtp.ssl.trust", host)
+  properties.setProperty("mail.smtp.ssl.protocols", "TLSv1.2")
+
   // properties.setProperty("mail.user", user)
   // properties.setProperty("mail.password", password)
   properties.setProperty("mail.smtp.auth", "true")
@@ -31,7 +35,10 @@ class Mailer(email_config: Email) extends LogSupport {
       }
     })
     val message = new MimeMessage(session)
-    message.setFrom(new InternetAddress(user))
+    email_config.email match {
+      case Some(email: String) => message.setFrom(new InternetAddress(email, "AppAnalyzer"))
+      case None => message.setFrom(new InternetAddress(user, "AppAnalyzer"))
+    }
     message.setSubject(subject)
     message.setText(content)
 
