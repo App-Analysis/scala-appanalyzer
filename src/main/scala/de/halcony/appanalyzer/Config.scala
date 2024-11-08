@@ -74,6 +74,15 @@ case class Emulator(
     proxyPort: Option[String]
 )
 
+case class Email(
+    host: String,
+    user: String,
+    email: Option[String],
+    password: String,
+    port: Int,
+    recipients: List[String]
+)
+
 case class Config(
     timeoutMilli: Long,
     verbose: Boolean,
@@ -83,6 +92,7 @@ case class Config(
     plugin: PluginManagerConfiguration,
     db: Database,
     devicePrep: DevicePreparation,
+    email: Option[Email],
     emulator: Option[Emulator],
     android: AndroidAnalysis,
     ios: iOS,
@@ -120,10 +130,12 @@ object Config extends DefaultJsonProtocol {
       : RootJsonFormat[PluginManagerConfiguration] =
     jsonFormat2(PluginManagerConfiguration)
 
+  implicit val emailFormat: RootJsonFormat[Email] = jsonFormat6(Email)
+
   implicit val emulatorFormat: RootJsonFormat[Emulator] =
     jsonFormat5(Emulator)
 
-  implicit val configFormat: RootJsonFormat[Config] = jsonFormat12(Config.apply)
+  implicit val configFormat: RootJsonFormat[Config] = jsonFormat13(Config.apply)
 
   /** given a file path parses the configuration file
     *
@@ -141,5 +153,4 @@ object Config extends DefaultJsonProtocol {
       source.close()
     }
   }
-
 }

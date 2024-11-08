@@ -6,19 +6,10 @@ import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
 import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{
-  AndroidDeviceNonRoot,
-  AndroidEmulatorRoot,
-  Device
-}
+import de.halcony.appanalyzer.platform.device.{AndroidDeviceDroidbot, AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOperatingSystems, device}
-import de.halcony.argparse.{
-  OptionalValue,
-  Parser,
-  ParsingException,
-  ParsingResult
-}
+import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
@@ -69,7 +60,7 @@ object AppAnalyzer extends LogSupport {
       Parser("run", "run an action/analysis")
         .addPositional(
           "platform",
-          "the platform to be analyzed [android_device,android_device_non_root,android_emulator_root,ios]"
+          "the platform to be analyzed [android_device,android_device_non_root,android_device_droidbot,android_emulator_root,ios]"
         )
         .addPositional(
           "path",
@@ -230,6 +221,7 @@ object AppAnalyzer extends LogSupport {
     pargs.getValue[String]("platform") match {
       case "android_device"          => device.AndroidDevice(conf)
       case "android_device_non_root" => new AndroidDeviceNonRoot(conf)
+      case "android_device_droidbot" => new AndroidDeviceDroidbot(conf)
       case "android_emulator_root"   => new AndroidEmulatorRoot(conf)
       case "ios"                     => device.iOSDevice(conf)
       case x =>
@@ -346,6 +338,7 @@ object AppAnalyzer extends LogSupport {
       case Some(value) => Experiment.loadExperiment(value.toInt)
       case None        => Experiment.createNewExperiment(description)
     }
+    val mailer: Option[Mailer] = conf.email.map(new Mailer(_))
     try {
       if (!empty) {
         val apps = getRelevantApps(pargs, device, conf)
@@ -367,6 +360,13 @@ object AppAnalyzer extends LogSupport {
       }
     } catch {
       case x: FatalError =>
+        mailer match {
+          case Some(mailer: Mailer) => mailer.send_email(
+            subject = "Fatal Error",
+            content = x.getMessage + "\n" + x.getStackTrace.mkString("\n")
+          )
+          case None =>
+        }
         error(x.getMessage)
       case x: Throwable =>
         error(s"${x.getMessage} \n ${x.getStackTrace.mkString("\n")}")
@@ -380,6 +380,14 @@ object AppAnalyzer extends LogSupport {
         info("ephemeral experiment is done")
       } else {
         info(s"experiment ${Experiment.getCurrentExperiment.id} is done")
+      }
+      mailer match {
+        case Some(mailer: Mailer) =>
+          mailer.send_email(
+            subject = "Experiment Done",
+            content = s"Experiment ${Experiment.getCurrentExperiment.id} is done"
+          )
+        case None =>
       }
     }
   }

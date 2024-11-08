@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "com.mchange" % "mchange-commons-java" % "0.2.20",
   "org.scala-lang.modules" %% "scala-xml" % "2.1.0",
   "org.clapper" %% "classutil" % "1.5.1",
+  "javax.mail" % "mail" % "1.4.7",
 )
 
 ThisBuild / resolvers ++= Seq(
