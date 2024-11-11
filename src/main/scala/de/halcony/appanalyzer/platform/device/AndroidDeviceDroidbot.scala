@@ -1,108 +1,112 @@
 package de.halcony.appanalyzer.platform.device
+
 import de.halcony.appanalyzer.Config
+import de.halcony.appanalyzer.appbinary.MobileApp
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
-import de.halcony.appanalyzer.platform.exceptions.FatalError
+import wvlet.log.LogSupport
 
 import scala.sys.process._
 
-class AndroidDeviceDroidbot(conf: Config) extends AndroidDevice(conf) {
+class AndroidDeviceDroidbot(config: Config)
+    extends AndroidDevice(config)
+    with LogSupport {
 
   override val PLATFORM_OS: PlatformOS = ANDROID
-  override val EMULATOR: Boolean = false
-  override val ROOT: Boolean = false
+  override val EMULATOR: Boolean = true
+  override val ROOT: Boolean = true
 
-  override def checkBootState(): Boolean =
-    try {
-      s"${conf.android.adb} shell 'getprop sys.boot_completed'".!!.trim == "1"
-    } catch {
-      case _: Throwable => false
+  private var emulatorProcess: Option[Process] = None
+
+  private var dead = false
+
+  private def startEmulator(): Process = {
+    if (dead) new Error("why u not dead?").printStackTrace()
+    val conf = config.emulator.get
+    val proxyConf: List[String] = (conf.proxyIP, conf.proxyPort) match {
+      case (Some(ip), Some(port)) => List[String]("-http-proxy", s"$ip:$port")
+      case _                      => List[String]()
     }
-
-  override def startFrida(): Unit = {} // no root -> no frida
-
-  override def stopFrida(): Unit = {} // no root -> no frida
-
-  override def withRunningFrida[T](func: => T): T = func // no root -> no frida
-
-  override def restartPhone(): Boolean = {
-    s"${conf.android.adb} reboot".!
-    var counter = 1
-    while (!checkBootState() && counter < 10) {
-      Thread.sleep(30000)
-      counter = counter + 1
-      if (counter % 4 == 1) restartAdb()
+    val snapshotConf: List[String] = conf.snapshot match {
+      case Some(value) => List("-snapshot", value)
+      case None        => List()
     }
-    if (!checkBootState())
-      throw new FatalError(
-        "We were unable to successfully restart the phone ... sucks mate"
-      )
-    Thread.sleep(1000)
-    performTouch(1000, 800) // todo: this should be configured in the config
-    info(
-      "we unlocked the phone, now we wait for another 2 minutes for everything to boot up"
+    val cmdArgs: Seq[String] =
+      List[String]("-avd", conf.avd) ++ snapshotConf ++ proxyConf
+    info(s"starting emulator with args : ${cmdArgs.mkString(" ")}")
+    Process(
+      conf.emulator,
+      cmdArgs
+    ).run(
+      ProcessLogger(_ => (), _ => ())
     )
-    Thread.sleep(120000)
-    if (checkBootState()) {
-      true
-    } else {
-      throw new FatalError(
-        "After unlocking the phone died ... sucks even more mate"
-      )
-    }
   }
 
-  /*private def restartAdb() : Unit = {
-    warn("restarting host adb server")
-    s"${conf.android.adb} kill-server".!!
-    s"${conf.android.adb} start-server".!!
-  }*/
-
-  /*override def getAppPackageAnalysis(conf: Config): Analysis =
-    packageAnalysis match {
-      case Some(value) => value
-      case None =>
-        packageAnalysis = Some(APK(conf))
-        packageAnalysis.get
-    }*/
-
-  /*override def ensureDevice(): Unit = {
-    val ret = s"${conf.android.adb} get-state" ! ProcessLogger(_ => ())
-    if (ret != 0)
-      throw new FatalError("there is no device reachable via adb")
-  }*/
-
-  override def resetDevice()
-      : Unit = {} // no frida/objection means no process to reset
-
-  /*override def clearStuckModals(): Unit = */
-
-  /*override def installApp(app: MobileApp): Unit = ???*/
+  override def installApp(app: MobileApp): Unit = {
+    info(s"installing app is handled by droidbot")
+  }
 
   override def uninstallApp(appId: String): Unit = {
-    info("Droidbot has already uninstalled app.")
+    info(s"uninstalling app is handled by droidbot")
   }
 
   override def startApp(appId: String, retries: Int): Unit = {
-    info("Droidbot will start app.")
+    info(s"starting app is handled by droidbot")
   }
 
-  /*override def closeApp(appId: String): Unit = ???*/
+  override def getForegroundAppId: Option[String] = {
+    info(s"getting foreground app is handled by droidbot")
+    None
+  }
 
-  /*override def performTouch(x: Int, y: Int): Unit = ???*/
+  override def startDevice(): Unit = ensureDevice()
 
-  /*override def setAppPermissions(appId: String): Unit = ???*/
+  override def stopDevice(): Unit = {
+    dead = true
+    info("stopping emulator")
+    emulatorProcess match {
+      case Some(value) =>
+        value.destroy()
+        emulatorProcess = None
+      case None =>
+    }
+  }
 
-  /*override def getForegroundAppId: Option[String] = {
+  override def ensureDevice(): Unit = {
+    emulatorProcess match {
+      case Some(process) =>
+        if (!process.isAlive()) {
+          emulatorProcess = None
+          ensureDevice()
+        }
+      case None =>
+        emulatorProcess = Some(startEmulator())
+        Thread.sleep(20000)
+        var counter = 0
+        while (!checkBootState()) {
+          Thread.sleep(20000)
+          counter += 1
+          if (counter > 3) {
+            throw new Error("cannot start the emulator - this is fatal")
+          }
+        }
+    }
+  }
 
-  }*/
+  override def resetDevice(): Unit = {
+    restartPhone()
+  }
 
-  override def getPrefs(appId: String): Option[String] =
-    None // no frida no prefs
+  override def restartPhone(): Boolean = {
+    emulatorProcess match {
+      case Some(value) =>
+        value.destroy()
+        info("destroyed emulator")
+        Thread.sleep(10000)
+        emulatorProcess = None
+      case None =>
+    }
+    ensureDevice()
+    true
+  }
 
-  override def getPlatformSpecificData(appId: String): Option[String] = None
-
-  override def getAppVersion(path: String): Option[String] =
-    throw new NotImplementedError()
-
-  /*override def getPid(appId: String): String = ???*/
 }
