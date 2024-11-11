@@ -296,7 +296,7 @@ object AppAnalyzer extends LogSupport {
         AppManifest(manifestPath, device.PLATFORM_OS, update = false)(conf)
       case None =>
         AppManifest(
-          path + "/manifest.json",
+          path,
           device.PLATFORM_OS,
           update = false
         )(conf)
