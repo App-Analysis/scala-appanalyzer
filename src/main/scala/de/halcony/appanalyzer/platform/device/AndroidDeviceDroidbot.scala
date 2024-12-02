@@ -55,6 +55,7 @@ class AndroidDeviceDroidbot(config: Config)
 
   override def getForegroundAppId: Option[String] = {
     info(s"getting foreground app is handled by droidbot")
+    // somehow we have to set the correct app here, or build checks differently
     None
   }
 
