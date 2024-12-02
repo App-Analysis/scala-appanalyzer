@@ -7,5 +7,10 @@
 /resources/AppleTeamId
 config.json
 /plugins/*
+!/resources/*
 /resources/trafficCollection/__pycache__/
 !/plugins/.gitkeep
+/venv*
+*.log
+*.json
+*.lst
