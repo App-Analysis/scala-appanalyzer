@@ -339,6 +339,7 @@ object AppAnalyzer extends LogSupport {
       case Some(value) => Experiment.loadExperiment(value.toInt)
       case None        => Experiment.createNewExperiment(description)
     }
+    val mailer: Option[Mailer] = conf.email.map(new Mailer(_))
     try {
       if (!empty) {
         val apps = getRelevantApps(pargs, device, conf)
@@ -360,6 +361,13 @@ object AppAnalyzer extends LogSupport {
       }
     } catch {
       case x: FatalError =>
+        mailer match {
+          case Some(mailer: Mailer) => mailer.send_email(
+            subject = "Fatal Error",
+            content = x.getMessage + "\n" + x.getStackTrace.mkString("\n")
+          )
+          case None =>
+        }
         error(x.getMessage)
       case x: Throwable =>
         error(s"${x.getMessage} \n ${x.getStackTrace.mkString("\n")}")
@@ -373,6 +381,14 @@ object AppAnalyzer extends LogSupport {
         info("ephemeral experiment is done")
       } else {
         info(s"experiment ${Experiment.getCurrentExperiment.id} is done")
+      }
+      mailer match {
+        case Some(mailer: Mailer) =>
+          mailer.send_email(
+            subject = "Experiment Done",
+            content = s"Experiment ${Experiment.getCurrentExperiment.id} is done"
+          )
+        case None =>
       }
     }
   }
@@ -576,11 +592,6 @@ object AppAnalyzer extends LogSupport {
   }
 
   private def is_filepath(str: String): Boolean = {
-    try {
-      Paths.get(str)
-      true
-    } catch {
-      case _: Exception => false
-    }
+    new File(str).exists()
   }
 }
