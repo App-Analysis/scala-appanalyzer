@@ -26,6 +26,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   private val FRIDA_LOG_FILE = "./frida.log"
   private var deactivate_install = false
+  private val initiallyInstalledApps: Set[String] = getInstalledApps
 
   def deactivateInstall(deactivate: Boolean): Unit = {
     deactivate_install = deactivate
@@ -88,13 +89,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   }
 
   private def getInstalledApps: Set[String] = {
-    s"${conf.android.adb} shell 'pm list packages -f'".!!.split("\n")
-      .filter {
-        _.startsWith("package:")
-      }
-      .map { line =>
-        line.split("\\.apk=").tail.head
-      }
+    s"${conf.android.adb} shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!
+      .split("\n")
       .toSet
   }
 
@@ -325,6 +321,9 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
               .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}")
           increaseFailedInteractions()
           success = false
+
+          info(s"APP: $appId, LIST ${getInstalledApps}")
+
           if (!getInstalledApps.contains(appId)) {
             warn(s"the app $appId does not seem to be installed")
             success = true
@@ -341,6 +340,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
           )
       }
     }
+    uninstallSanityCheck()
     ret match {
       case 0 =>
       case x =>
@@ -490,4 +490,24 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   override def getAppVersion(path: String): Option[String] =
     throw new NotImplementedError()
+
+  private def uninstallSanityCheck(): Unit = {
+    var currentlyInstalledApps = getInstalledApps
+    var diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+    info(s"Uninstall sanity check")
+    diff.foreach(app => {
+      val cmd = s"${conf.android.adb} uninstall $app"
+      val _ = cmd.!!
+    })
+    currentlyInstalledApps = getInstalledApps
+    diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+    if (diff.nonEmpty) {
+      warn(s"Uninstall sanity check failed")
+      diff.foreach(app => {
+        warn(s"Uninstall sanity check failed for $app")
+      })
+    } else {
+      info(s"Uninstall sanity check passed")
+    }
+  }
 }
