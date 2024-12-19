@@ -249,7 +249,7 @@ class Analysis(
           if (app.id != "EMPTY")
             device.startApp(app.id)
           checkIfAppIsStillRunning(
-            true
+            false
           ) // initial check if the app startup even worked
           this.checkStop()
           info("extracting start interface")
