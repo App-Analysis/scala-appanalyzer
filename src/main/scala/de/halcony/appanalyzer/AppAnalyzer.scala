@@ -6,7 +6,7 @@ import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
 import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{AndroidDeviceDroidbot, AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
+import de.halcony.appanalyzer.platform.device.{AndroidEmulatorDroidbot, AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOperatingSystems, device}
 import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
@@ -60,7 +60,7 @@ object AppAnalyzer extends LogSupport {
       Parser("run", "run an action/analysis")
         .addPositional(
           "platform",
-          "the platform to be analyzed [android_device,android_device_non_root,android_device_droidbot,android_emulator_root,ios]"
+          "the platform to be analyzed [android_device,android_device_non_root,android_emulator_root,android_emulator_droidbot,ios]"
         )
         .addPositional(
           "path",
@@ -221,7 +221,8 @@ object AppAnalyzer extends LogSupport {
     pargs.getValue[String]("platform") match {
       case "android_device"          => device.AndroidDevice(conf)
       case "android_device_non_root" => new AndroidDeviceNonRoot(conf)
-      case "android_device_droidbot" => new AndroidDeviceDroidbot(conf)
+      // case "android_device_droidbot" => new AndroidEmulatorDroidbot(conf)
+      case "android_emulator_droidbot" => new AndroidEmulatorDroidbot(conf)
       case "android_emulator_root"   => new AndroidEmulatorRoot(conf)
       case "ios"                     => device.iOSDevice(conf)
       case x =>
