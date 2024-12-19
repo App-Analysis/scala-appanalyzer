@@ -6,20 +6,19 @@ to enable a wide range of functions.
 
 ## "global" requirements
 
-| requirement                                                          | installation                 |
-|----------------------------------------------------------------------|------------------------------|
-| [python](https://www.python.org/)                                    | recommended: python3         |
-| [mitmproxy](https://mitmproxy.org/)                                  | ```pip install mitmproxy```  |
-| [objection](https://github.com/sensepost/objection)                  | ```pip install objection```  |
-| [node & npm](https://nodejs.org/en)                                  | recommended: node 16 & npm 8 |
-| [frida](https://frida.re/)                                           | ```npm i -g frida```         |
-| [Appium](http://appium.io/docs/en/2.0/)                              | ```npm i -g appium```        |
-| [OpenJDK](https://openjdk.org/)                                      | Java 17                      |
-| [scala](https://www.scala-lang.org/)                                 | via package manager          |
-| [sbt](https://www.scala-sbt.org/download.html)                       | via package manager          |
-| [Postgres](https://www.postgresql.org/)                              | via package manager          |
-| [AndroidStudio with CLI-tools](https://developer.android.com/studio) | via tar                      |
-| [libimobiledevice](https://libimobiledevice.org/)                    | via package manager          |
+| requirement                                                          | installation                    |
+|----------------------------------------------------------------------|---------------------------------|
+| [python](https://www.python.org/)                                    | recommended: python3            |
+| [mitmproxy](https://mitmproxy.org/)                                  | ```pip install mitmproxy```     |
+| [objection](https://github.com/sensepost/objection)                  | ```pip install objection```     |
+| [dotenv](https://pypi.org/project/python-dotenv/)                    | ```pip install python-dotenv``` |
+| [frida](https://frida.re/)                                           | ```pip install frida-tools```   |
+| [OpenJDK](https://openjdk.org/)                                      | Java 17                         |
+| [scala](https://www.scala-lang.org/)                                 | via package manager             |
+| [sbt](https://www.scala-sbt.org/download.html)                       | via package manager             |
+| [Postgres](https://www.postgresql.org/)                              | via package manager             |
+| [AndroidStudio with CLI-tools](https://developer.android.com/studio) | via tar                         |
+| [libimobiledevice](https://libimobiledevice.org/)                    | via package manager             |
 
 You might have to install atob as well via ```npm i -g atob```.
 CommandLine tools can be installed in Android Studio under ```Settings -> SDK -> SDK Tools```.
@@ -48,6 +47,8 @@ i.e., ensure that port, ip, username, database name, and password are correct in
 
 ### Appium
 
+If ```appium: true``` is set in the config a node 16 and npm 8 installation is required.
+Appium can then be installed via ```npm i -g appium```.
 Make sure to install the correct driver for your device type.
 - Android requires ```UIAutomator2``` which can be installed via ```appium driver install uiautomator2```
 - iOS requires `tbd`
