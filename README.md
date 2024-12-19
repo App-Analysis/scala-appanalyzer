@@ -11,7 +11,6 @@ to enable a wide range of functions.
 | [python](https://www.python.org/)                                    | recommended: python3            |
 | [mitmproxy](https://mitmproxy.org/)                                  | ```pip install mitmproxy```     |
 | [objection](https://github.com/sensepost/objection)                  | ```pip install objection```     |
-| [dotenv](https://pypi.org/project/python-dotenv/)                    | ```pip install python-dotenv``` |
 | [frida](https://frida.re/)                                           | ```pip install frida-tools```   |
 | [OpenJDK](https://openjdk.org/)                                      | Java 17                         |
 | [scala](https://www.scala-lang.org/)                                 | via package manager             |
