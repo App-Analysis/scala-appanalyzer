@@ -3,6 +3,7 @@
 /project/target/*
 /.bsp/*
 /.idea/*
+.vscode/*
 *~
 /resources/AppleTeamId
 config.json

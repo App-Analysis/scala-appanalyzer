@@ -17,6 +17,14 @@
         }
       }
   },
+  "email": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "ad\\exchange",
+    "email": "exchange@optional.org",
+    "password": "",
+    "recipients": ["email1", "email2"]
+  },
   "emulator" : {
     "emulator" : "/path/to/emulator",
     "avd" : "name-of-avd",
