@@ -20,10 +20,6 @@ class AndroidEmulatorDroidbot(config: Config)
 
   private var dead = false
 
-  override def installApp(app: MobileApp): Unit = {
-    info(s"installing app is handled by droidbot")
-  }
-
   override def uninstallApp(appId: String): Unit = {
     info(s"uninstalling app is handled by droidbot")
   }
