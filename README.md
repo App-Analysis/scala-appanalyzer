@@ -11,6 +11,7 @@ to enable a wide range of functions.
 | [python](https://www.python.org/)                                    | recommended: python3            |
 | [mitmproxy](https://mitmproxy.org/)                                  | ```pip install mitmproxy```     |
 | [objection](https://github.com/sensepost/objection)                  | ```pip install objection```     |
+| [dotenv](https://pypi.org/project/python-dotenv/)                    | ```pip install python-dotenv``` |
 | [frida](https://frida.re/)                                           | ```pip install frida-tools```   |
 | [OpenJDK](https://openjdk.org/)                                      | Java 17                         |
 | [scala](https://www.scala-lang.org/)                                 | via package manager             |
@@ -31,6 +32,8 @@ export PATH="$PATH:~/Android/Sdk/cmdline-tools/latest/bin"
 to either your ```.bashrc``` or ```.profile```.
 You also have to export your ```ANDROID_HOME``` pointing to your SDK installation.
 This can be done via ```export ANDROID_HOME="~/Android/Sdk"```.
+It is recommended to create a virtual environment for the python dependencies and activating 
+this before using/starting the Appanalyzer.
 
 ## Appanalyzer Configuration
 
