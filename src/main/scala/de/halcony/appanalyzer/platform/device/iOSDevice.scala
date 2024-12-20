@@ -225,6 +225,8 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
+  override def getInstalledApps: Set[String] = {Set()}
+
   override def checkBootState(): Boolean =
     true // there is no reboot, thus this is always true
 }
