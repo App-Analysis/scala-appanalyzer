@@ -180,6 +180,9 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     }
 
   override def ensureDevice(): Unit = {
+    if (initiallyInstalledApps.isEmpty) {
+      initiallyInstalledApps = Some(getInstalledApps)
+    }
     val ret = s"${conf.android.adb} get-state" ! ProcessLogger(_ => ())
     if (ret != 0)
       throw new FatalError("there is no device reachable via adb")

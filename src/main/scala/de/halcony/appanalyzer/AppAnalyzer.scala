@@ -6,10 +6,20 @@ import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
 import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.appium.Appium
-import de.halcony.appanalyzer.platform.device.{AndroidDeviceDroidbot, AndroidDeviceNonRoot, AndroidEmulatorRoot, Device}
+import de.halcony.appanalyzer.platform.device.{
+  AndroidDeviceDroidbot,
+  AndroidDeviceNonRoot,
+  AndroidEmulatorRoot,
+  Device
+}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 import de.halcony.appanalyzer.platform.{PlatformOperatingSystems, device}
-import de.halcony.argparse.{OptionalValue, Parser, ParsingException, ParsingResult}
+import de.halcony.argparse.{
+  OptionalValue,
+  Parser,
+  ParsingException,
+  ParsingResult
+}
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
@@ -341,7 +351,6 @@ object AppAnalyzer extends LogSupport {
     val mailer: Option[Mailer] = conf.email.map(new Mailer(_))
     try {
       if (!empty) {
-        val initiallyInstalledApps = device.getInstalledApps
         val apps = getRelevantApps(pargs, device, conf)
         var counter = apps.length
         apps.foreach { app =>
@@ -350,7 +359,7 @@ object AppAnalyzer extends LogSupport {
           )
           Analysis.runAnalysis(getNextActor, app, device, conf)
           counter = counter - 1
-          uninstallSanityCheck(conf = conf, device = device, initiallyInstalledApps = initiallyInstalledApps)
+          uninstallSanityCheck(conf = conf, device = device)
         }
       } else {
         Analysis.runAnalysis(
@@ -363,10 +372,11 @@ object AppAnalyzer extends LogSupport {
     } catch {
       case x: FatalError =>
         mailer match {
-          case Some(mailer: Mailer) => mailer.send_email(
-            subject = "Fatal Error",
-            content = x.getMessage + "\n" + x.getStackTrace.mkString("\n")
-          )
+          case Some(mailer: Mailer) =>
+            mailer.send_email(
+              subject = "Fatal Error",
+              content = x.getMessage + "\n" + x.getStackTrace.mkString("\n")
+            )
           case None =>
         }
         error(x.getMessage)
@@ -387,7 +397,8 @@ object AppAnalyzer extends LogSupport {
         case Some(mailer: Mailer) =>
           mailer.send_email(
             subject = "Experiment Done",
-            content = s"Experiment ${Experiment.getCurrentExperiment.id} is done"
+            content =
+              s"Experiment ${Experiment.getCurrentExperiment.id} is done"
           )
         case None =>
       }
@@ -596,23 +607,29 @@ object AppAnalyzer extends LogSupport {
     new File(str).exists()
   }
 
-  private def uninstallSanityCheck(conf: Config, device: Device, initiallyInstalledApps: Set[String]): Unit = {
-    var currentlyInstalledApps = device.getInstalledApps
-    var diff = initiallyInstalledApps.diff(currentlyInstalledApps)
-    info(s"Uninstall sanity check")
-    diff.foreach(app => {
-      val cmd = s"${conf.android.adb} uninstall $app"
-      val _ = cmd.!!
-    })
-    currentlyInstalledApps = device.getInstalledApps
-    diff = initiallyInstalledApps.diff(currentlyInstalledApps)
-    if (diff.nonEmpty) {
-      warn(s"Uninstall sanity check failed")
-      diff.foreach(app => {
-        warn(s"Uninstall sanity check failed for $app")
-      })
-    } else {
-      info(s"Uninstall sanity check passed")
+  private def uninstallSanityCheck(conf: Config, device: Device): Unit = {
+    val initiallyInstalledApps = device.initiallyInstalledApps
+    initiallyInstalledApps match {
+      case Some(initiallyInstalledApps) =>
+        var currentlyInstalledApps = device.getInstalledApps
+        var diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+        info(s"Uninstall sanity check")
+        diff.foreach(app => {
+          val cmd = s"${conf.android.adb} uninstall $app"
+          val _ = cmd.!!
+        })
+        currentlyInstalledApps = device.getInstalledApps
+        diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+        if (diff.nonEmpty) {
+          warn(s"Uninstall sanity check failed")
+          diff.foreach(app => {
+            warn(s"Uninstall sanity check failed for $app")
+          })
+        } else {
+          info(s"Uninstall sanity check passed")
+        }
+      case None => info("No sanity check performed initiallyInstalledApps are empty")
     }
+
   }
 }

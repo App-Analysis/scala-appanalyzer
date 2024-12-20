@@ -24,6 +24,7 @@ trait Device extends LogSupport {
   private val FATAL_ERROR_THRESHOLD: Int = 1000
   val EMULATOR: Boolean
   val ROOT: Boolean
+  var initiallyInstalledApps: Option[Set[String]] = None
 
   protected def increaseFailedInteractions(): Unit = {
     failedInteractions = failedInteractions + 1
