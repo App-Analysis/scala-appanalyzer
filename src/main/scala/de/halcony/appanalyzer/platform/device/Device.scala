@@ -106,6 +106,8 @@ trait Device extends LogSupport {
 
   def getPid(appId: String): String
 
+  def getInstalledApps: Set[String]
+
   def runFridaScript(pid: String, script: String): String = {
     val PATH_TO_FRIDA_SCRIPT = "./resources/frida/runFridaScript.js"
     case class Result(result: String)

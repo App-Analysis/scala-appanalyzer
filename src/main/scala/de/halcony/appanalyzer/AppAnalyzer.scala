@@ -14,11 +14,11 @@ import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
 import java.io.File
-import java.nio.file.Paths
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.io.Source
 import scala.io.StdIn.readLine
+import scala.sys.process._
 
 object AppAnalyzer extends LogSupport {
 
@@ -341,6 +341,7 @@ object AppAnalyzer extends LogSupport {
     val mailer: Option[Mailer] = conf.email.map(new Mailer(_))
     try {
       if (!empty) {
+        val initiallyInstalledApps = device.getInstalledApps
         val apps = getRelevantApps(pargs, device, conf)
         var counter = apps.length
         apps.foreach { app =>
@@ -349,6 +350,7 @@ object AppAnalyzer extends LogSupport {
           )
           Analysis.runAnalysis(getNextActor, app, device, conf)
           counter = counter - 1
+          uninstallSanityCheck(conf = conf, device = device, initiallyInstalledApps = initiallyInstalledApps)
         }
       } else {
         Analysis.runAnalysis(
@@ -592,5 +594,25 @@ object AppAnalyzer extends LogSupport {
 
   private def is_filepath(str: String): Boolean = {
     new File(str).exists()
+  }
+
+  private def uninstallSanityCheck(conf: Config, device: Device, initiallyInstalledApps: Set[String]): Unit = {
+    var currentlyInstalledApps = device.getInstalledApps
+    var diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+    info(s"Uninstall sanity check")
+    diff.foreach(app => {
+      val cmd = s"${conf.android.adb} uninstall $app"
+      val _ = cmd.!!
+    })
+    currentlyInstalledApps = device.getInstalledApps
+    diff = initiallyInstalledApps.diff(currentlyInstalledApps)
+    if (diff.nonEmpty) {
+      warn(s"Uninstall sanity check failed")
+      diff.foreach(app => {
+        warn(s"Uninstall sanity check failed for $app")
+      })
+    } else {
+      info(s"Uninstall sanity check passed")
+    }
   }
 }
