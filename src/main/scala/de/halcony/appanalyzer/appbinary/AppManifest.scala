@@ -7,7 +7,6 @@ import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, Platfo
 import de.halcony.argparse.{Parser, ParsingResult}
 import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
-
 import java.io.{File, FileWriter}
 import scala.collection.mutable
 import scala.io.Source
