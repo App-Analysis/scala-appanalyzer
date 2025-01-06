@@ -84,7 +84,7 @@ class AndroidDeviceNonRoot(conf: Config, device: Option[String])
 
   /*override def uninstallApp(appId: String): Unit = ???*/
 
-  override def startApp(appId: String, retries: Int): Unit = {
+  override def startApp(appId: String, noAppStartCheck : Boolean, retries: Int): Unit = {
     val _ =
       s"${conf.android.adb} $getDeviceConfStringAdb shell monkey -p $appId 1".!!
     Thread.sleep(10000)

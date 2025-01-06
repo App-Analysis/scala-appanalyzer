@@ -43,7 +43,8 @@ class Analysis(
     app: MobileApp,
     actor: ActorPlugin,
     device: Device,
-    conf: Config
+    conf: Config,
+    noAppStartCheck : Boolean
 ) extends LogSupport {
 
   private var id: Option[Int] = None
@@ -248,7 +249,7 @@ class Analysis(
           info(s"starting app ${app.id} for interface analysis")
           actor.onAppStartup(this)
           if (app.id != "EMPTY")
-            device.startApp(app.id)
+            device.startApp(app.id, noAppStartCheck)
           checkIfAppIsStillRunning(
             true
           ) // initial check if the app startup even worked
@@ -439,7 +440,8 @@ object Analysis extends LogSupport {
       actor: ActorPlugin,
       app: MobileApp,
       device: Device,
-      conf: Config
+      conf: Config,
+      noAppStartCheck : Boolean
   ): Unit = {
     info(s"running analysis for ${app.toString}")
     device.ensureDevice()
@@ -459,7 +461,7 @@ object Analysis extends LogSupport {
                 s"setting up analysis ${actor.getDescription} for app $app"
               )
               val analysis =
-                new Analysis(actor.getDescription, app, actor, device, conf)
+                new Analysis(actor.getDescription, app, actor, device, conf, noAppStartCheck)
               setCurrentAnalysis(analysis)
               analysis.insert()
               try {

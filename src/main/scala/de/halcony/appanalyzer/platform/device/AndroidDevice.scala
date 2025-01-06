@@ -372,7 +372,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
     }
   }
 
-  override def startApp(appId: String, retries: Int = 3): Unit = {
+  override def startApp(appId: String, noStartCheck : Boolean, retries: Int = 3): Unit = {
     var counter = 0
     var done = false
     var stdio = ListBuffer[String]()
@@ -393,7 +393,8 @@ case class AndroidDevice(conf: Config, device: Option[String])
       Thread.sleep(10000) // we give each app 10 seconds to start
       if (objection.get.isAlive()) {
         val fgid = getForegroundAppId.getOrElse(throw AppClosedItself(appId))
-        if (fgid != appId) {
+        // chrome indicates a TWA or CT startup
+        if ( (fgid != appId && fgid != "com.android.chrome") && !noStartCheck) {
           warn(s"foreground id is wrong : '$fgid' instead of '$appId'")
           closeApp(appId)
         } else {
@@ -420,7 +421,15 @@ case class AndroidDevice(conf: Config, device: Option[String])
     }
   }
 
+  override def closePossibleBrowser() : Unit = {
+    val browserAppId = "com.android.chrome"
+    val cmd =
+      s"${conf.android.adb} $getDeviceConfStringAdb shell am force-stop $browserAppId"
+    if (conf.verbose) cmd.! else cmd ! ProcessLogger(_ => ())
+  }
+
   override def closeApp(appId: String): Unit = {
+    closePossibleBrowser()
     cleanObjectionProcess()
     info(s"closing app $appId")
     val cmd =

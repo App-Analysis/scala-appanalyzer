@@ -86,7 +86,7 @@ class AndroidDeviceDroidbot(conf: Config, device: Option[String])
     info("Droidbot has already uninstalled app.")
   }
 
-  override def startApp(appId: String, retries: Int): Unit = {
+  override def startApp(appId: String, noAppStartCheck : Boolean, retries: Int): Unit = {
     info("Droidbot will start app.")
   }
 

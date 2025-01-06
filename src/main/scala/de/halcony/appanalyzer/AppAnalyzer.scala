@@ -154,6 +154,12 @@ object AppAnalyzer extends LogSupport {
               None,
               "a csv list of <key>=<value> pairs"
             )
+            .addFlag(
+              "no-app-start-check",
+              "n",
+              "no-app-start-check",
+              "if set there is no check if the app is running"
+            )
             .addDefault[(ParsingResult, Config) => Unit](
               "func",
               runPluginExperiment,
@@ -380,7 +386,7 @@ object AppAnalyzer extends LogSupport {
           info(
             s"we have $counter app${if (counter > 1) "s" else ""} to analyze"
           )
-          Analysis.runAnalysis(getNextActor, app, device, conf)
+          Analysis.runAnalysis(getNextActor, app, device, conf, pargs.getValue[Boolean]("no-app-start-check"))
           counter = counter - 1
           uninstallSanityCheck(conf = conf, device = device)
         }
@@ -389,7 +395,8 @@ object AppAnalyzer extends LogSupport {
           getNextActor,
           MobileApp("EMPTY", "EMPTY", device.PLATFORM_OS, "EMPTY"),
           device,
-          conf
+          conf,
+          pargs.getValue[Boolean]("")
         )
       }
     } catch {
@@ -535,7 +542,7 @@ object AppAnalyzer extends LogSupport {
     }
 
     tryApiCommand("startApp") {
-      device.startApp(appId)
+      device.startApp(appId, noStartCheck = false)
       Some(s"app running: ${device.getForegroundAppId.get == appId}")
     }
 
