@@ -17,7 +17,7 @@ class AndroidDeviceDroidbot(conf: Config, device: Option[String])
 
   override def checkBootState(): Boolean =
     try {
-      s"${conf.android.adb} $getDeviceConfString shell 'getprop sys.boot_completed'".!!.trim == "1"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell 'getprop sys.boot_completed'".!!.trim == "1"
     } catch {
       case _: Throwable => false
     }
@@ -29,7 +29,7 @@ class AndroidDeviceDroidbot(conf: Config, device: Option[String])
   override def withRunningFrida[T](func: => T): T = func // no root -> no frida
 
   override def restartPhone(): Boolean = {
-    s"${conf.android.adb} $getDeviceConfString reboot".!
+    s"${conf.android.adb} $getDeviceConfStringAdb reboot".!
     var counter = 1
     while (!checkBootState() && counter < 10) {
       Thread.sleep(30000)
