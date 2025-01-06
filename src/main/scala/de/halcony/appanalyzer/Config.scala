@@ -56,7 +56,7 @@ case class iOS(
   }
 }
 
-case class Mitmproxy(path: String, addonScript: String)
+case class Mitmproxy(path: String, addonScript: String, port: String)
 
 case class Database(
     host: String,
@@ -106,7 +106,7 @@ case class Config(
 
 object Config extends DefaultJsonProtocol {
 
-  implicit val mitmproxyFormat: RootJsonFormat[Mitmproxy] = jsonFormat2(
+  implicit val mitmproxyFormat: RootJsonFormat[Mitmproxy] = jsonFormat3(
     Mitmproxy
   )
 

@@ -2,11 +2,12 @@
   "timeoutMilli" : 900000,
   "verbose" : false,
   "appium" : "appium",
-  "appiumURLExtension" : "wd/hub/",
+  "appiumURLExtension" : "",
   "tmpFolder" : "/tmp/folder/",
   "mitm" : {
     "path" : "mitmdump",
-    "addonScript" : "./resources/trafficCollection/mitm-addon.py"
+    "addonScript" : "./resources/trafficCollection/mitm-addon.py",
+    "port" : "8080"
   },
   "plugin" : {
     "folder" : "./plugins/",

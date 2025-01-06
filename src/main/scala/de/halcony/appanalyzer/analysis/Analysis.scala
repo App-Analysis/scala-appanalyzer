@@ -122,6 +122,7 @@ class Analysis(
               interfaceId,
               comment,
               conf,
+              port = conf.mitm.port,
               parameters
             )
         )

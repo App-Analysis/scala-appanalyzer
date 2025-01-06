@@ -13,6 +13,7 @@ class TrafficCollection(
     interface: Option[Int],
     comment: String,
     conf: Config,
+    port: String,
     dumb: Boolean = false,
     parameters: Option[Seq[String]] = None
 ) extends LogSupport {
@@ -26,6 +27,8 @@ class TrafficCollection(
       conf.mitm.path,
       "-s",
       conf.mitm.addonScript,
+      "-p",
+      port,
       "--set",
       s"run=${id.get}"
     )
@@ -114,6 +117,7 @@ object TrafficCollection {
       interface: Option[Int],
       comment: String,
       conf: Config,
+      port: String,
       parameters: Option[Seq[String]] = None
   ): TrafficCollection = {
     activeTrafficCollection match {
@@ -126,6 +130,7 @@ object TrafficCollection {
             interface,
             comment,
             conf,
+            port = port,
             dumb = false,
             parameters = parameters
           )
@@ -141,7 +146,14 @@ object TrafficCollection {
         throw new FatalError("there is already a traffic collection running")
       case None =>
         activeTrafficCollection = Some(
-          new TrafficCollection(-1, null, "dumb", conf, dumb = true)
+          new TrafficCollection(
+            -1,
+            null,
+            "dumb",
+            conf,
+            port = "8080",
+            dumb = true
+          )
         )
         activeTrafficCollection.get.start()
         activeTrafficCollection.get
