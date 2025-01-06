@@ -160,7 +160,7 @@ object AppManifest extends LogSupport {
       } else {
         if (!path.endsWith(suffix)) {
           throw new RuntimeException(
-            s"if you do not provide a folder of files the file needs to end with '$suffix'"
+            s"for '$path': if you do not provide a folder of files the file needs to end with '$suffix'"
           )
         } else {
           List(path)
@@ -233,8 +233,8 @@ object AppManifest extends LogSupport {
       manifest.addApp(name, app)
     }
     if (manifest.getManifest.isEmpty || update) {
-      if (manifest.getManifest.isEmpty)
-        info("the manifest was empty, running update based on app folder")
+      if(manifest.getManifest.isEmpty)
+        info(s"the manifest at '$manifestFilePath' in '$appFolderPath' was empty, running update based on app folder")
       else
         info("we force an update based on the app folder")
       val contained = readInFolder(appFolderPath, platform).map { app =>
