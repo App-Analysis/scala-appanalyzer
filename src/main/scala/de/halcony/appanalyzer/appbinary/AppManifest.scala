@@ -3,7 +3,11 @@ package de.halcony.appanalyzer.appbinary
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.{Config, appbinary}
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS, IOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  PlatformOS,
+  IOS
+}
 import de.halcony.argparse.{Parser, ParsingResult}
 import spray.json.{JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
@@ -98,7 +102,7 @@ object AppManifest extends LogSupport {
   private def readInFolder(path: String, device: PlatformOS)(implicit
       conf: Config
   ): List[MobileApp] = {
-    val appPaths = getApps(path,device)
+    val appPaths = getApps(path, device)
     info(s"we detected ${appPaths.length} app files in the provided folder")
     val future = Future.sequence {
       appPaths.map { appBinaryPath =>
@@ -117,12 +121,17 @@ object AppManifest extends LogSupport {
       .map(_.get)
   }
 
-  private def anlyzeAppBinary(path: String, device: PlatformOperatingSystems.PlatformOS)(implicit
+  private def anlyzeAppBinary(
+      path: String,
+      device: PlatformOperatingSystems.PlatformOS
+  )(implicit
       conf: Config
   ): Try[MobileApp] = {
     device match {
       case PlatformOperatingSystems.IOS =>
-        Failure(new NotImplementedError()) // todo: at some point we might want to do iOS again
+        Failure(
+          new NotImplementedError()
+        ) // todo: at some point we might want to do iOS again
       case PlatformOperatingSystems.ANDROID => analyzeApk(path)
     }
   }
@@ -211,7 +220,7 @@ object AppManifest extends LogSupport {
     )
   }
 
-  //todo we need to include the path to the app folder in the manifest to ensure that we do not use the wrong manifest for an app set
+  // todo we need to include the path to the app folder in the manifest to ensure that we do not use the wrong manifest for an app set
 
   def apply(
       appFolderPath: String,
@@ -224,7 +233,7 @@ object AppManifest extends LogSupport {
       manifest.addApp(name, app)
     }
     if (manifest.getManifest.isEmpty || update) {
-      if(manifest.getManifest.isEmpty)
+      if (manifest.getManifest.isEmpty)
         info("the manifest was empty, running update based on app folder")
       else
         info("we force an update based on the app folder")

@@ -4,7 +4,10 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.{FridaScripts, iOSFridaScripts}
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{PlatformOS, IOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  PlatformOS,
+  IOS
+}
 import de.halcony.appanalyzer.platform.exceptions.{
   AppClosedItself,
   UnableToInstallApp,
@@ -225,7 +228,7 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
-  override def getInstalledApps: Set[String] = {Set()}
+  override def getInstalledApps: Set[String] = { Set() }
 
   override def checkBootState(): Boolean =
     true // there is no reboot, thus this is always true

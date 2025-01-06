@@ -29,21 +29,28 @@ class Mailer(email_config: Email) extends LogSupport {
   properties.setProperty("mail.smtp.auth", "true")
 
   def send_email(subject: String, content: String): Unit = {
-    val session = Session.getInstance(properties, new Authenticator() {
-      override def getPasswordAuthentication: PasswordAuthentication = {
-        new PasswordAuthentication(user, password)
+    val session = Session.getInstance(
+      properties,
+      new Authenticator() {
+        override def getPasswordAuthentication: PasswordAuthentication = {
+          new PasswordAuthentication(user, password)
+        }
       }
-    })
+    )
     val message = new MimeMessage(session)
     email_config.email match {
-      case Some(email: String) => message.setFrom(new InternetAddress(email, "AppAnalyzer"))
+      case Some(email: String) =>
+        message.setFrom(new InternetAddress(email, "AppAnalyzer"))
       case None => message.setFrom(new InternetAddress(user, "AppAnalyzer"))
     }
     message.setSubject(subject)
     message.setText(content)
 
     for (recipient <- recipients) {
-      message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient))
+      message.addRecipient(
+        Message.RecipientType.TO,
+        new InternetAddress(recipient)
+      )
     }
     Transport.send(message)
   }
