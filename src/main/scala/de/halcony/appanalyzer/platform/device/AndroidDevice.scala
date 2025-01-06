@@ -66,14 +66,19 @@ case class AndroidDevice(conf: Config, device: Option[String])
   override def startDevice()
       : Unit = {} // the smartphone is supposed to be already on
 
-  protected def getDeviceConfString: String = device match {
-    case Some(value) => s"--serial $value"
+  protected def getDeviceConfStringAdb: String = device match {
+    case Some(value) => s"-s $value"
+    case None        => ""
+  }
+
+  protected def getDeviceConfStringObjection: String = device match {
+    case Some(value) => s"-S $value"
     case None        => ""
   }
 
   private def detectRunningFrida(): Option[String] = {
     val cmd =
-      s"${conf.android.adb} $getDeviceConfString shell 'ps -e | grep frida-server'"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell 'ps -e | grep frida-server'"
     try {
       cmd.!!.replace("\t", " ")
         .split(" ")
@@ -99,13 +104,13 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   override def getInstalledApps: Set[String] = {
-    s"${conf.android.adb} $getDeviceConfString shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!.split(
+    s"${conf.android.adb} $getDeviceConfStringAdb shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!.split(
       "\n"
     ).toSet
   }
 
   private def killProcess(pid: String): Unit = {
-    s"${conf.android.adb} $getDeviceConfString shell 'su -c kill -9 $pid'".!!
+    s"${conf.android.adb} $getDeviceConfStringAdb shell 'su -c kill -9 $pid'".!!
   }
 
   override def startFrida(): Unit = {
@@ -123,7 +128,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       }
       val process =
         Process(
-          s"${conf.android.adb} $getDeviceConfString shell 'su -c /data/local/tmp/frida-server'"
+          s"${conf.android.adb} $getDeviceConfStringAdb shell 'su -c /data/local/tmp/frida-server'"
         )
           .run(
             ProcessLogger(
@@ -195,7 +200,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       initiallyInstalledApps = Some(getInstalledApps)
     }
     val ret =
-      s"${conf.android.adb} $getDeviceConfString get-state" ! ProcessLogger(_ =>
+      s"${conf.android.adb} $getDeviceConfStringAdb get-state" ! ProcessLogger(_ =>
         ()
       )
     if (ret != 0)
@@ -204,8 +209,8 @@ case class AndroidDevice(conf: Config, device: Option[String])
 
   protected def restartAdb(): Unit = {
     warn("restarting host adb server")
-    s"${conf.android.adb} $getDeviceConfString kill-server".!!
-    s"${conf.android.adb} $getDeviceConfString start-server".!!
+    s"${conf.android.adb} $getDeviceConfStringAdb kill-server".!!
+    s"${conf.android.adb} $getDeviceConfStringAdb start-server".!!
   }
 
   override def resetDevice(): Unit = {
@@ -213,12 +218,12 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   override def performTouch(x: Int, y: Int): Unit = {
-    s"${conf.android.adb} $getDeviceConfString shell input tap $x $y".!
+    s"${conf.android.adb} $getDeviceConfStringAdb shell input tap $x $y".!
   }
 
   override def checkBootState(): Boolean = {
     try {
-      s"${conf.android.adb} $getDeviceConfString shell 'getprop sys.boot_completed'".!!.trim == "1"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell 'getprop sys.boot_completed'".!!.trim == "1"
     } catch {
       case _: Throwable => false
     }
@@ -230,7 +235,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
     val fridaWasRunning = runningFrida.nonEmpty
     if (runningFrida.nonEmpty)
       stopFrida()
-    s"${conf.android.adb} $getDeviceConfString reboot".!
+    s"${conf.android.adb} $getDeviceConfStringAdb reboot".!
     var counter = 1
     while (!checkBootState() && counter < 10) { // a more dynamic reboot procedure
       Thread.sleep(30000)
@@ -246,7 +251,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       throw new FatalError(
         "we were unable to successfully restart the phone ... sucks mate"
       )
-    s"${conf.android.adb} $getDeviceConfString shell input keyevent 82".! // this unlocks the phone
+    s"${conf.android.adb} $getDeviceConfStringAdb shell input keyevent 82".! // this unlocks the phone
     Thread.sleep(1000)
     performTouch(
       1000,
@@ -281,7 +286,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
     val stdio: ListBuffer[String] = ListBuffer()
     val stderr: ListBuffer[String] = ListBuffer()
     val cmd =
-      s"${conf.android.adb} $getDeviceConfString install-multiple -g ${app.path}"
+      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.path}"
     val ret =
       if (conf.verbose) cmd.!
       else
@@ -309,7 +314,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
     while (tries < MAX_TRIES && !success) {
       info(s"uninstalling app $appId")
       tries = tries + 1
-      val cmd = s"${conf.android.adb} $getDeviceConfString uninstall $appId"
+      val cmd = s"${conf.android.adb} $getDeviceConfStringAdb uninstall $appId"
       var uninstallProcess: Process = null
       stdio = ListBuffer()
       stderr = ListBuffer()
@@ -378,7 +383,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       info(s"starting app $appId")
       cleanObjectionProcess()
       val cmd =
-        s"${conf.android.objection} $getDeviceConfString --gadget $appId explore --startup-command 'android sslpinning disable'"
+        s"${conf.android.objection} $getDeviceConfStringObjection --gadget $appId explore --startup-command 'android sslpinning disable'"
       val process = Process(cmd)
       objection = Some(
         process.run(
@@ -419,14 +424,14 @@ case class AndroidDevice(conf: Config, device: Option[String])
     cleanObjectionProcess()
     info(s"closing app $appId")
     val cmd =
-      s"${conf.android.adb} $getDeviceConfString shell am force-stop $appId"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell am force-stop $appId"
     if (conf.verbose) cmd.! else cmd ! ProcessLogger(_ => ())
   }
 
   override def setAppPermissions(appId: String): Unit = {
     info(s"setting permissions for $appId")
     val cmd =
-      s"${conf.android.adb} $getDeviceConfString shell pm list permissions -g -d -u"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell pm list permissions -g -d -u"
     val permissions = cmd.!!
     permissions
       .split("\n")
@@ -434,7 +439,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       .map(_.replace("  permission:", ""))
       .foreach { permission =>
         try {
-          s"${conf.android.adb} $getDeviceConfString shell pm grant $appId $permission" ! ProcessLogger(
+          s"${conf.android.adb} $getDeviceConfStringAdb shell pm grant $appId $permission" ! ProcessLogger(
             _ => ()
           )
         } catch {
@@ -460,7 +465,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
 
   override def getForegroundAppId: Option[String] = {
     val cmd =
-      s"${conf.android.adb} $getDeviceConfString shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
+      s"${conf.android.adb} $getDeviceConfStringAdb shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
     val ret = cmd.!!
     ret.split("\n").find(_.contains("mCurrentFocus=")) match {
       case Some(value) =>
@@ -483,7 +488,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
   override def getPid(appid: String): String = {
     try {
       val cmd =
-        s"${conf.android.adb} $getDeviceConfString shell pidof -s $appid"
+        s"${conf.android.adb} $getDeviceConfStringAdb shell pidof -s $appid"
       cmd.!!.trim
     } catch {
       case _: RuntimeException => // if we have a runtime exception it is an exit value -1
