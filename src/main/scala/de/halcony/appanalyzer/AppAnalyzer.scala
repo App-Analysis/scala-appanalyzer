@@ -83,6 +83,13 @@ object AppAnalyzer extends LogSupport {
           None,
           "the path to the manifest to be used for this run"
         )
+        .addOptional(
+          "device",
+          "d",
+          "device",
+          None,
+          "if provided specifies the devices in adb"
+        )
         .addSubparser(AppManifest.parser)
         .addSubparser(
           Parser(
@@ -229,11 +236,27 @@ object AppAnalyzer extends LogSupport {
 
   private def getDevice(pargs: ParsingResult, conf: Config): Device = {
     pargs.getValue[String]("platform") match {
-      case "android_device"          => device.AndroidDevice(conf)
-      case "android_device_non_root" => new AndroidDeviceNonRoot(conf)
-      case "android_device_droidbot" => new AndroidDeviceDroidbot(conf)
-      case "android_emulator_root"   => new AndroidEmulatorRoot(conf)
-      case "ios"                     => device.iOSDevice(conf)
+      case "android_device" =>
+        device.AndroidDevice(
+          conf,
+          pargs.get[OptionalValue[String]]("device").value
+        )
+      case "android_device_non_root" =>
+        new AndroidDeviceNonRoot(
+          conf,
+          pargs.get[OptionalValue[String]]("device").value
+        )
+      case "android_device_droidbot" =>
+        new AndroidDeviceDroidbot(
+          conf,
+          pargs.get[OptionalValue[String]]("device").value
+        )
+      case "android_emulator_root" =>
+        new AndroidEmulatorRoot(
+          conf,
+          pargs.get[OptionalValue[String]]("device").value
+        )
+      case "ios" => device.iOSDevice(conf)
       case x =>
         throw new RuntimeException(s"device type $x is not yet supported")
     }
@@ -628,7 +651,8 @@ object AppAnalyzer extends LogSupport {
         } else {
           info(s"Uninstall sanity check passed")
         }
-      case None => info("No sanity check performed initiallyInstalledApps are empty")
+      case None =>
+        info("No sanity check performed initiallyInstalledApps are empty")
     }
 
   }
