@@ -67,7 +67,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       : Unit = {} // the smartphone is supposed to be already on
 
   protected def getDeviceConfString: String = device match {
-    case Some(value) => s" -s $value"
+    case Some(value) => s"--serial $value"
     case None        => ""
   }
 
