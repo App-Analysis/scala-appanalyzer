@@ -1,12 +1,15 @@
 package de.halcony.appanalyzer.platform.device
 
 import de.halcony.appanalyzer.Config
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  PlatformOS
+}
 import wvlet.log.LogSupport
 import scala.sys.process._
 
-class AndroidEmulatorRoot(config: Config)
-    extends AndroidDevice(config)
+class AndroidEmulatorRoot(config: Config, device: Option[String])
+    extends AndroidDevice(config, device)
     with LogSupport {
 
   override val PLATFORM_OS: PlatformOS = ANDROID

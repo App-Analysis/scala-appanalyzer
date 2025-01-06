@@ -4,7 +4,10 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.FridaScripts
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  PlatformOS
+}
 import de.halcony.appanalyzer.platform.exceptions.{
   AppClosedItself,
   FatalError,
@@ -22,7 +25,9 @@ import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.{Await, Future}
 import scala.sys.process.{Process, ProcessLogger, _}
 
-case class AndroidDevice(conf: Config) extends Device with LogSupport {
+case class AndroidDevice(conf: Config, device: Option[String])
+    extends Device
+    with LogSupport {
 
   private val FRIDA_LOG_FILE = "./frida.log"
   private var deactivate_install = false
@@ -61,8 +66,14 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   override def startDevice()
       : Unit = {} // the smartphone is supposed to be already on
 
+  protected def getDeviceConfString: String = device match {
+    case Some(value) => s" -s $value"
+    case None        => ""
+  }
+
   private def detectRunningFrida(): Option[String] = {
-    val cmd = s"${conf.android.adb} shell 'ps -e | grep frida-server'"
+    val cmd =
+      s"${conf.android.adb} $getDeviceConfString shell 'ps -e | grep frida-server'"
     try {
       cmd.!!.replace("\t", " ")
         .split(" ")
@@ -88,13 +99,13 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   }
 
   override def getInstalledApps: Set[String] = {
-    s"${conf.android.adb} shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!
-      .split("\n")
-      .toSet
+    s"${conf.android.adb} $getDeviceConfString shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!.split(
+      "\n"
+    ).toSet
   }
 
   private def killProcess(pid: String): Unit = {
-    s"${conf.android.adb} shell 'su -c kill -9 $pid'".!!
+    s"${conf.android.adb} $getDeviceConfString shell 'su -c kill -9 $pid'".!!
   }
 
   override def startFrida(): Unit = {
@@ -112,7 +123,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       }
       val process =
         Process(
-          s"${conf.android.adb} shell 'su -c /data/local/tmp/frida-server'"
+          s"${conf.android.adb} $getDeviceConfString shell 'su -c /data/local/tmp/frida-server'"
         )
           .run(
             ProcessLogger(
@@ -183,15 +194,18 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     if (initiallyInstalledApps.isEmpty) {
       initiallyInstalledApps = Some(getInstalledApps)
     }
-    val ret = s"${conf.android.adb} get-state" ! ProcessLogger(_ => ())
+    val ret =
+      s"${conf.android.adb} $getDeviceConfString get-state" ! ProcessLogger(_ =>
+        ()
+      )
     if (ret != 0)
       throw new FatalError("there is no device reachable via adb")
   }
 
   protected def restartAdb(): Unit = {
     warn("restarting host adb server")
-    s"${conf.android.adb} kill-server".!!
-    s"${conf.android.adb} start-server".!!
+    s"${conf.android.adb} $getDeviceConfString kill-server".!!
+    s"${conf.android.adb} $getDeviceConfString start-server".!!
   }
 
   override def resetDevice(): Unit = {
@@ -199,12 +213,12 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   }
 
   override def performTouch(x: Int, y: Int): Unit = {
-    s"${conf.android.adb} shell input tap $x $y".!
+    s"${conf.android.adb} $getDeviceConfString shell input tap $x $y".!
   }
 
   override def checkBootState(): Boolean = {
     try {
-      s"${conf.android.adb} shell 'getprop sys.boot_completed'".!!.trim == "1"
+      s"${conf.android.adb} $getDeviceConfString shell 'getprop sys.boot_completed'".!!.trim == "1"
     } catch {
       case _: Throwable => false
     }
@@ -216,7 +230,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     val fridaWasRunning = runningFrida.nonEmpty
     if (runningFrida.nonEmpty)
       stopFrida()
-    s"${conf.android.adb} reboot".!
+    s"${conf.android.adb} $getDeviceConfString reboot".!
     var counter = 1
     while (!checkBootState() && counter < 10) { // a more dynamic reboot procedure
       Thread.sleep(30000)
@@ -232,7 +246,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       throw new FatalError(
         "we were unable to successfully restart the phone ... sucks mate"
       )
-    s"${conf.android.adb} shell input keyevent 82".! // this unlocks the phone
+    s"${conf.android.adb} $getDeviceConfString shell input keyevent 82".! // this unlocks the phone
     Thread.sleep(1000)
     performTouch(
       1000,
@@ -267,7 +281,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     val stdio: ListBuffer[String] = ListBuffer()
     val stderr: ListBuffer[String] = ListBuffer()
     val cmd =
-      s"${conf.android.adb} install-multiple -g ${app.path}"
+      s"${conf.android.adb} $getDeviceConfString install-multiple -g ${app.path}"
     val ret =
       if (conf.verbose) cmd.!
       else
@@ -295,7 +309,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
     while (tries < MAX_TRIES && !success) {
       info(s"uninstalling app $appId")
       tries = tries + 1
-      val cmd = s"${conf.android.adb} uninstall $appId"
+      val cmd = s"${conf.android.adb} $getDeviceConfString uninstall $appId"
       var uninstallProcess: Process = null
       stdio = ListBuffer()
       stderr = ListBuffer()
@@ -364,7 +378,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       info(s"starting app $appId")
       cleanObjectionProcess()
       val cmd =
-        s"${conf.android.objection} --gadget $appId explore --startup-command 'android sslpinning disable'"
+        s"${conf.android.objection} $getDeviceConfString --gadget $appId explore --startup-command 'android sslpinning disable'"
       val process = Process(cmd)
       objection = Some(
         process.run(
@@ -404,13 +418,15 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
   override def closeApp(appId: String): Unit = {
     cleanObjectionProcess()
     info(s"closing app $appId")
-    val cmd = s"${conf.android.adb} shell am force-stop $appId"
+    val cmd =
+      s"${conf.android.adb} $getDeviceConfString shell am force-stop $appId"
     if (conf.verbose) cmd.! else cmd ! ProcessLogger(_ => ())
   }
 
   override def setAppPermissions(appId: String): Unit = {
     info(s"setting permissions for $appId")
-    val cmd = s"${conf.android.adb} shell pm list permissions -g -d -u"
+    val cmd =
+      s"${conf.android.adb} $getDeviceConfString shell pm list permissions -g -d -u"
     val permissions = cmd.!!
     permissions
       .split("\n")
@@ -418,7 +434,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
       .map(_.replace("  permission:", ""))
       .foreach { permission =>
         try {
-          s"${conf.android.adb} shell pm grant $appId $permission" ! ProcessLogger(
+          s"${conf.android.adb} $getDeviceConfString shell pm grant $appId $permission" ! ProcessLogger(
             _ => ()
           )
         } catch {
@@ -444,7 +460,7 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   override def getForegroundAppId: Option[String] = {
     val cmd =
-      s"${conf.android.adb} shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
+      s"${conf.android.adb} $getDeviceConfString shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
     val ret = cmd.!!
     ret.split("\n").find(_.contains("mCurrentFocus=")) match {
       case Some(value) =>
@@ -466,7 +482,8 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   override def getPid(appid: String): String = {
     try {
-      val cmd = s"${conf.android.adb} shell pidof -s $appid"
+      val cmd =
+        s"${conf.android.adb} $getDeviceConfString shell pidof -s $appid"
       cmd.!!.trim
     } catch {
       case _: RuntimeException => // if we have a runtime exception it is an exit value -1
@@ -491,6 +508,5 @@ case class AndroidDevice(conf: Config) extends Device with LogSupport {
 
   override def getAppVersion(path: String): Option[String] =
     throw new NotImplementedError()
-
 
 }

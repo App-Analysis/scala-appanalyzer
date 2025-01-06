@@ -1,11 +1,15 @@
 package de.halcony.appanalyzer.platform.device
 import de.halcony.appanalyzer.Config
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  PlatformOS
+}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 
 import scala.sys.process._
 
-class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
+class AndroidDeviceNonRoot(conf: Config, device: Option[String])
+    extends AndroidDevice(conf, device) {
 
   override val PLATFORM_OS: PlatformOS = ANDROID
   override val EMULATOR: Boolean = false
@@ -13,7 +17,7 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
 
   override def checkBootState(): Boolean =
     try {
-      s"${conf.android.adb} shell 'getprop sys.boot_completed'".!!.trim == "1"
+      s"${conf.android.adb} $getDeviceConfString shell 'getprop sys.boot_completed'".!!.trim == "1"
     } catch {
       case _: Throwable => false
     }
@@ -25,7 +29,7 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
   override def withRunningFrida[T](func: => T): T = func // no root -> no frida
 
   override def restartPhone(): Boolean = {
-    s"${conf.android.adb} reboot".!
+    s"${conf.android.adb} $getDeviceConfString reboot".!
     var counter = 1
     while (!checkBootState() && counter < 10) {
       Thread.sleep(30000)
@@ -81,7 +85,8 @@ class AndroidDeviceNonRoot(conf: Config) extends AndroidDevice(conf) {
   /*override def uninstallApp(appId: String): Unit = ???*/
 
   override def startApp(appId: String, retries: Int): Unit = {
-    val _ = s"${conf.android.adb} shell monkey -p $appId 1".!!
+    val _ =
+      s"${conf.android.adb} $getDeviceConfString shell monkey -p $appId 1".!!
     Thread.sleep(10000)
     // info(ret)
   }

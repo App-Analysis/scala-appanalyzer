@@ -1,11 +1,15 @@
 package de.halcony.appanalyzer.platform.device
 import de.halcony.appanalyzer.Config
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  PlatformOS
+}
 import de.halcony.appanalyzer.platform.exceptions.FatalError
 
 import scala.sys.process._
 
-class AndroidDeviceDroidbot(conf: Config) extends AndroidDevice(conf) {
+class AndroidDeviceDroidbot(conf: Config, device: Option[String])
+    extends AndroidDevice(conf, device) {
 
   override val PLATFORM_OS: PlatformOS = ANDROID
   override val EMULATOR: Boolean = false
@@ -13,7 +17,7 @@ class AndroidDeviceDroidbot(conf: Config) extends AndroidDevice(conf) {
 
   override def checkBootState(): Boolean =
     try {
-      s"${conf.android.adb} shell 'getprop sys.boot_completed'".!!.trim == "1"
+      s"${conf.android.adb} $getDeviceConfString shell 'getprop sys.boot_completed'".!!.trim == "1"
     } catch {
       case _: Throwable => false
     }
@@ -25,7 +29,7 @@ class AndroidDeviceDroidbot(conf: Config) extends AndroidDevice(conf) {
   override def withRunningFrida[T](func: => T): T = func // no root -> no frida
 
   override def restartPhone(): Boolean = {
-    s"${conf.android.adb} reboot".!
+    s"${conf.android.adb} $getDeviceConfString reboot".!
     var counter = 1
     while (!checkBootState() && counter < 10) {
       Thread.sleep(30000)
