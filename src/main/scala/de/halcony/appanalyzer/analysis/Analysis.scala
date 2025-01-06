@@ -191,10 +191,15 @@ class Analysis(
           if (value == app.id) {
             true
           } else {
-            error(
-              s"the foreground app is $value but we expected ${app.id} - this indicates that the app closed itself"
-            )
-            false
+            if(value == "com.android.chrome") {
+              warn("there is chrome in the foreground this is possibly due to CT or TWA!")
+              true
+            } else {
+              error(
+                s"the foreground app is $value but we expected ${app.id} - this indicates that the app closed itself"
+              )
+              false
+            }
           }
         case None => false
       }
