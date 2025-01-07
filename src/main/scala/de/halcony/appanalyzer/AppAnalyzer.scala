@@ -637,6 +637,7 @@ object AppAnalyzer extends LogSupport {
     new File(str).exists()
   }
 
+  //todo: this needs to be moved into the device API
   private def uninstallSanityCheck(conf: Config, device: Device): Unit = {
     val initiallyInstalledApps = device.initiallyInstalledApps
     initiallyInstalledApps match {
@@ -645,6 +646,7 @@ object AppAnalyzer extends LogSupport {
         var diff = initiallyInstalledApps.diff(currentlyInstalledApps)
         info(s"Uninstall sanity check")
         diff.foreach(app => {
+          warn(s"detected non-initial app $app")
           val cmd = s"${conf.android.adb} uninstall $app"
           val _ = cmd.!!
         })
