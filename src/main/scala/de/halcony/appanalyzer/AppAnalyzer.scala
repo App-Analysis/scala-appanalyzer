@@ -396,7 +396,7 @@ object AppAnalyzer extends LogSupport {
           MobileApp("EMPTY", "EMPTY", device.PLATFORM_OS, "EMPTY"),
           device,
           conf,
-          pargs.getValue[Boolean]("")
+          pargs.getValue[Boolean]("no-app-start-check")
         )
       }
     } catch {
