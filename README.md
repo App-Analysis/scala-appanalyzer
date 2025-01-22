@@ -4,6 +4,8 @@ The scala-appanalyzer is a tool for traffic collection for mobile applications
 for iOS, Android and AVDs (Android Emulators). It allows for plugin import
 to enable a wide range of functions.
 
+**Note:** We are currently in the process of removing iOS as keeping up with iOS prooved too difficult as most of our plugins require root access.
+
 ## "global" requirements
 
 | requirement                                                          | installation                 |
@@ -48,9 +50,10 @@ i.e., ensure that port, ip, username, database name, and password are correct in
 
 ### Appium
 
+**Note:** We are currently changing the Appium integration as currently using Appium makes a measurement quite unstable. Thus we strongly recommend deactivating Appium in the `config.json` for now. This does not affect traffic measurements in any way, it just deactivates the ability to interact with app elements.
+
 Make sure to install the correct driver for your device type.
 - Android requires ```UIAutomator2``` which can be installed via ```appium driver install uiautomator2```
-- iOS requires `tbd`
 
 ### Traffic Interception
 
