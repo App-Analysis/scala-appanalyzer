@@ -1,5 +1,5 @@
 name := "appanalyzer"
-ThisBuild / scalaVersion := "2.13.10"
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / versionScheme := Some("semver-spec")
 organization := "de.halcony"
 
