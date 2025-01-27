@@ -40,133 +40,7 @@ object AppAnalyzer extends LogSupport {
   private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(executorService)
 
-  private val parser: Parser = Parser(
-    "AppAnalyzer",
-    "run apps and analyze their consent dialogs"
-  )
-    .addFlag(
-      "verbose",
-      "v",
-      "verbose",
-      "if set a stacktrace is provided with any fatal error"
-    )
-    .addOptional(
-      "config",
-      "c",
-      "config",
-      Some("./config.json"),
-      " the configuration file"
-    )
-    .addSubparser(PluginManager.parser)
-    .addSubparser(
-      Parser("removedAnalysis", "delete listed analysis ids")
-        .addPositional(
-          "analysisIds",
-          "csv list of ids or file containing list of ids"
-        )
-        .addDefault[(ParsingResult, Config) => Unit]("func", deleteAnalysisMain)
-    )
-    .addSubparser(
-      Parser("run", "run an action/analysis")
-        .addPositional(
-          "platform",
-          "the platform to be analyzed [android_device,android_device_non_root,android_device_droidbot,android_emulator_root,ios]"
-        )
-        .addPositional(
-          "path",
-          "path to the required data for the chosen action"
-        )
-        .addOptional(
-          "manifest",
-          "m",
-          "manifest",
-          None,
-          "the path to the manifest to be used for this run"
-        )
-        .addOptional(
-          "device",
-          "d",
-          "device",
-          None,
-          "if provided specifies the devices in adb"
-        )
-        .addSubparser(AppManifest.parser)
-        .addSubparser(
-          Parser(
-            "functionalityCheck",
-            "run through all fundamental API actions to check if it works"
-          )
-            .addDefault[(ParsingResult, Config) => Unit](
-              "func",
-              functionalityCheck
-            )
-        )
-        .addSubparser(
-          Parser("plugin", "run an analysis using a plugin")
-            .addPositional(
-              "plugin",
-              "the name of the actor plugin providing the analysis capabilities"
-            )
-            .addFlag(
-              "ephemeral",
-              "e",
-              "ephemeral",
-              "if set the experiment will be deleted directly after execution"
-            )
-            .addFlag(
-              "empty",
-              "w",
-              "without-app",
-              "if set then no app is installed and the analysis is run on the raw OS"
-            )
-            .addOptional(
-              "only",
-              "o",
-              "only",
-              None,
-              "a file or a csv list listing app ids that shall be analyzed (any other app is ignored)"
-            )
-            .addOptional(
-              "description",
-              "d",
-              "description",
-              Some(""),
-              "an optional experiment description"
-            )
-            .addOptional(
-              "batchSize",
-              "b",
-              "batch",
-              None,
-              "limit the amount of apps that are analyzed in bulk"
-            )
-            .addOptional(
-              "continue",
-              "r",
-              "resume",
-              None,
-              "provides the experiment to be continued"
-            )
-            .addOptional(
-              "parameters",
-              "p",
-              "parameters",
-              None,
-              "a csv list of <key>=<value> pairs"
-            )
-            .addFlag(
-              "no-app-start-check",
-              "n",
-              "no-app-start-check",
-              "if set there is no check if the app is running"
-            )
-            .addDefault[(ParsingResult, Config) => Unit](
-              "func",
-              runPluginExperiment,
-              "runs an experiment using the specified plugin"
-            )
-        )
-    )
+  private val parser: Parser = new AppAnalyzerParser().createParser()
   // private object IgnoreMe extends Throwable
 
   /** main function parsing config and command line
@@ -193,7 +67,7 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
-  def getBatchSize(pargs: ParsingResult): Option[Int] = {
+  private def getBatchSize(pargs: ParsingResult): Option[Int] = {
     try {
       Some(pargs.getValue[String]("batchSize").toInt)
     } catch {
@@ -435,7 +309,7 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
-  private def runPluginExperiment(pargs: ParsingResult, conf: Config): Unit = {
+  def runPluginExperiment(pargs: ParsingResult, conf: Config): Unit = {
     val pluginName = pargs.getValue[String]("plugin")
     val empty = pargs.getValue[Boolean]("empty")
     val parameters: Map[String, String] = extract_parameters(pargs)
@@ -456,7 +330,7 @@ object AppAnalyzer extends LogSupport {
     * @param conf
     *   the parsed config file
     */
-  private def functionalityCheck(pargs: ParsingResult, conf: Config): Unit = {
+  def functionalityCheck(pargs: ParsingResult, conf: Config): Unit = {
     println("Welcome to the functionality check!")
     println()
     println(
