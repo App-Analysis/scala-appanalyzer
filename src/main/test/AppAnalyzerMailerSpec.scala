@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
-class TestMailer extends AnyFlatSpec with should.Matchers {
+class AppAnalyzerMailerSpec extends AnyFlatSpec with should.Matchers {
   "Mailer" should "send email" in {
     val conf = Config.parse("config.json")
     val mailer = new Mailer(conf.email.get)
