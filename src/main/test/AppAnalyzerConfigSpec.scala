@@ -1,6 +1,5 @@
 import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.analysis.plugin.RemotePluginConfig
-import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
