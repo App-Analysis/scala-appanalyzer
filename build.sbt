@@ -6,7 +6,7 @@ organization := "de.halcony"
 enablePlugins(JavaAppPackaging)
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.19" % Test,
   "de.halcony" %% "scala-argparse" % "1.1.11",
   "io.spray" %% "spray-json" % "1.3.6",
   "com.typesafe" % "config" % "1.4.2",
