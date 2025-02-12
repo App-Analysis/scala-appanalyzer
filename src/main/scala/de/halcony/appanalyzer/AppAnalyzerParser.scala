@@ -5,6 +5,7 @@ import de.halcony.appanalyzer.AppAnalyzer.{
   functionalityCheck,
   runPluginExperiment
 }
+import de.halcony.appanalyzer.appbinary.AppManifest.updateOrCreateManifestMain
 import de.halcony.appanalyzer.analysis.plugin.PluginManager
 import de.halcony.appanalyzer.appbinary.AppManifest
 import de.halcony.argparse.{Parser, ParsingResult}
@@ -69,7 +70,7 @@ class AppAnalyzerParser {
         short = "d",
         description = "if provided specifies the devices in adb"
       )
-      .addSubparser(AppManifest.parser)
+      .addSubparser(createAppManifestParser())
       .addSubparser(createFunctionalityCheckParser())
       .addSubparser(createPluginParser())
   }
@@ -106,17 +107,33 @@ class AppAnalyzerParser {
       )
   }
 
+  private def createAppManifestParser(): Parser = {
+    Parser("manifest")
+      .addSubparser(
+        Parser(
+          "update",
+          "updates the manifest file for the provided app data collection"
+        )
+          .addDefault[(ParsingResult, Config) => Unit](
+            "func",
+            updateOrCreateManifestMain
+          )
+      )
+  }
+
   private def addFlags(parser: Parser): Parser = {
     parser
       .addFlag(
         name = "ephemeral",
-        short= "e",
-        description = "if set the experiment will be deleted directly after execution"
+        short = "e",
+        description =
+          "if set the experiment will be deleted directly after execution"
       )
       .addFlag(
         name = "empty",
         short = "w",
-        description = "if set then no app is installed and the analysis is run on the raw OS"
+        description =
+          "if set then no app is installed and the analysis is run on the raw OS"
       )
       .addFlag(
         name = "no-app-start-check",
@@ -164,4 +181,5 @@ class AppAnalyzerParser {
         description = "a csv list of <key>=<value> pairs"
       )
   }
+
 }
