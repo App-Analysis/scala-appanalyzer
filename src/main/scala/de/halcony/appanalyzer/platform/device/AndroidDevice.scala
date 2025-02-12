@@ -282,11 +282,11 @@ case class AndroidDevice(conf: Config, device: Option[String])
   override def clearStuckModals(): Unit = {}
 
   override def installApp(app: MobileApp): Unit = {
-    info(s"installing on device ${app.path}")
+    info(s"installing on device ${app.escaped_path}")
     val stdio: ListBuffer[String] = ListBuffer()
     val stderr: ListBuffer[String] = ListBuffer()
     val cmd =
-      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.path}"
+      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.escaped_path}"
     val ret =
       if (conf.verbose) cmd.!
       else
@@ -343,7 +343,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
           increaseFailedInteractions()
           success = false
 
-          info(s"APP: $appId, LIST ${getInstalledApps}")
+          info(s"APP: $appId, LIST $getInstalledApps")
 
           if (!getInstalledApps.contains(appId)) {
             warn(s"the app $appId does not seem to be installed")

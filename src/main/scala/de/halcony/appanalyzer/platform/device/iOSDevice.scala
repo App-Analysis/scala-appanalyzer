@@ -112,10 +112,10 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     // should have last line 'Install: Complete'
     try {
       info(s"installing $app")
-      val cmd = s"${conf.ios.ideviceinstaller} --install ${app.path}"
+      val cmd = s"${conf.ios.ideviceinstaller} --install ${app.escaped_path}"
       val ret = cmd.!!
       if (ret.trim.split("\n").last != "Install: Complete")
-        throw new RuntimeException(s"install of ${app.path} was not complete")
+        throw new RuntimeException(s"install of ${app.escaped_path} was not complete")
     } catch {
       case x: RuntimeException => throw UnableToInstallApp(app, x.getMessage)
     }
