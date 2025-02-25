@@ -7,7 +7,6 @@ import de.halcony.appanalyzer.AppAnalyzer.{
 }
 import de.halcony.appanalyzer.appbinary.AppManifest.updateOrCreateManifestMain
 import de.halcony.appanalyzer.analysis.plugin.PluginManager
-import de.halcony.appanalyzer.appbinary.AppManifest
 import de.halcony.argparse.{Parser, ParsingResult}
 
 class AppAnalyzerParser {
