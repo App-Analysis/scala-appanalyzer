@@ -24,6 +24,7 @@ import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
 import java.io.File
+import java.nio.file.Path
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.io.Source
@@ -160,12 +161,9 @@ object AppAnalyzer extends LogSupport {
   ): List[MobileApp] = {
     val alreadyChecked: Set[String] =
       if (filtering) Experiment.getAnalyzedApps.map(_.id).toSet else Set()
-    manifest.getManifest
-      .filter { case (key, _) =>
-        !alreadyChecked.contains(key)
-      }
-      .values
-      .toList
+    manifest.apps.filter { element =>
+      !alreadyChecked.contains(element.id)
+    }.toList
   }
 
   private def getOnlyApps(only: Option[String]): Option[Set[String]] = {
@@ -203,18 +201,20 @@ object AppAnalyzer extends LogSupport {
       conf: Config,
       filtering: Boolean = true
   ): List[MobileApp] = {
-    val path = pargs.getValue[String]("path")
+    val path = Path.of(pargs.getValue[String]("path"))
     val manifest = pargs.get[OptionalValue[String]]("manifest").value match {
       case Some(manifestPath) =>
-        AppManifest(manifestPath, device.PLATFORM_OS, update = false)(conf)
+        AppManifest(Path.of(manifestPath), device.PLATFORM_OS, update = false)(
+          conf
+        )
       case None =>
         AppManifest(
-          path + "/manifest.json",
+          path.resolve("manifest.json"),
           device.PLATFORM_OS,
           update = false
         )(conf)
     }
-    if (manifest.getManifest.isEmpty)
+    if (manifest.apps.isEmpty)
       warn(
         "the manifest appears to be empty - either your folder is empty or you have not created the manifest yet"
       )
@@ -260,14 +260,20 @@ object AppAnalyzer extends LogSupport {
           info(
             s"we have $counter app${if (counter > 1) "s" else ""} to analyze"
           )
-          Analysis.runAnalysis(getNextActor, app, device, conf, pargs.getValue[Boolean]("no-app-start-check"))
+          Analysis.runAnalysis(
+            getNextActor,
+            app,
+            device,
+            conf,
+            pargs.getValue[Boolean]("no-app-start-check")
+          )
           counter = counter - 1
           uninstallSanityCheck(conf = conf, device = device)
         }
       } else {
         Analysis.runAnalysis(
           getNextActor,
-          MobileApp("EMPTY", "EMPTY", device.PLATFORM_OS, "EMPTY"),
+          MobileApp("EMPTY", "EMPTY", device.PLATFORM_OS, Path.of("EMPTY")),
           device,
           conf,
           pargs.getValue[Boolean]("")
@@ -347,7 +353,7 @@ object AppAnalyzer extends LogSupport {
     println("Let's start...")
 
     val device = getDevice(pargs, conf)
-    val path: String = pargs.getValue[String]("path")
+    val path: Path = Path.of(pargs.getValue[String]("path"))
     println(s"We are supposed to work on ${device.PLATFORM_OS}")
     println(s"As our Canary App we are using $path")
 
@@ -511,7 +517,7 @@ object AppAnalyzer extends LogSupport {
     new File(str).exists()
   }
 
-  //todo: this needs to be moved into the device API
+  // todo: this needs to be moved into the device API
   private def uninstallSanityCheck(conf: Config, device: Device): Unit = {
     val initiallyInstalledApps = device.initiallyInstalledApps
     initiallyInstalledApps match {
