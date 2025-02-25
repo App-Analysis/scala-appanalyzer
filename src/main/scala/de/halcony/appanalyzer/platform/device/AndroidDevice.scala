@@ -4,21 +4,12 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.FridaScripts
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
-  ANDROID,
-  PlatformOS
-}
-import de.halcony.appanalyzer.platform.exceptions.{
-  AppClosedItself,
-  FatalError,
-  FridaDied,
-  UnableToInstallApp,
-  UnableToStartApp,
-  UnableToUninstallApp
-}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, FatalError, FridaDied, UnableToInstallApp, UnableToStartApp, UnableToUninstallApp}
 import wvlet.log.LogSupport
 
 import java.io.{BufferedWriter, FileWriter}
+import java.nio.file.Path
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, MILLISECONDS}
@@ -355,7 +346,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
         case x: Throwable =>
           if (uninstallProcess.isAlive()) uninstallProcess.destroy()
           throw UnableToUninstallApp(
-            MobileApp(appId, "NA", ANDROID, "NA"),
+            MobileApp(appId, "NA", ANDROID, Path.of("NA")),
             s"adb returned $ret\n${x.getMessage}\nSTDIO\n${stdio
                 .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
           )
@@ -366,7 +357,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       case x =>
         error(s"final adb uninstall try resulted in ret code $x")
         throw UnableToUninstallApp(
-          MobileApp(appId, "NA", ANDROID, "NA"),
+          MobileApp(appId, "NA", ANDROID, Path.of("NA")),
           s"adb returned $ret\nSTDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
         )
     }
