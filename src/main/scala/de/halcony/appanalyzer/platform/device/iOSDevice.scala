@@ -4,18 +4,12 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.ipa.IPA
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.{FridaScripts, iOSFridaScripts}
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
-  PlatformOS,
-  IOS
-}
-import de.halcony.appanalyzer.platform.exceptions.{
-  AppClosedItself,
-  UnableToInstallApp,
-  UnableToUninstallApp
-}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{IOS, PlatformOS}
+import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, UnableToInstallApp, UnableToUninstallApp}
 import spray.json.{JsArray, JsNumber, JsObject, JsString, JsonParser}
 import wvlet.log.LogSupport
 
+import java.nio.file.Path
 import java.time.Instant
 import scala.sys.process._
 
@@ -132,7 +126,7 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     } catch {
       case x: RuntimeException =>
         throw UnableToUninstallApp(
-          MobileApp(appId, "NA", IOS, "NA"),
+          MobileApp(appId, "NA", IOS, Path.of("NA")),
           x.getMessage
         )
     }
