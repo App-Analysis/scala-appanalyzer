@@ -212,6 +212,7 @@ object PluginManager extends LogSupport {
     plugins.toList
   }
 
+  // todo: this seems broken
   /** list all available plugins based on the configured remote repositories
     *
     * @param pargs
