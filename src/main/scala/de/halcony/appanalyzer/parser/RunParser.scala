@@ -1,51 +1,15 @@
-package de.halcony.appanalyzer
+package de.halcony.appanalyzer.parser
 
 import de.halcony.appanalyzer.AppAnalyzer.{
-  deleteAnalysisMain,
   functionalityCheck,
   runPluginExperiment
 }
+import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.AppManifest.updateOrCreateManifestMain
-import de.halcony.appanalyzer.analysis.plugin.PluginManager
 import de.halcony.argparse.{Parser, ParsingResult}
 
-class AppAnalyzerParser {
-  def createParser(): Parser = {
-    createMainParser()
-  }
-
-  private def createMainParser(): Parser = {
-    Parser(
-      name = "AppAnalyzer",
-      description = "run apps and analyze their consent dialogs"
-    )
-      .addFlag(
-        name = "verbose",
-        short = "v",
-        description = "if set a stacktrace is provided with any fatal error"
-      )
-      .addOptional(
-        name = "config",
-        short = "c",
-        default = Some("config.json"),
-        description = "the configuration file"
-      )
-      .addSubparser(PluginManager.parser)
-      .addSubparser(createRemovedAnalysisParser())
-      .addSubparser(createRunParser())
-  }
-
-  private def createRemovedAnalysisParser(): Parser = {
-    Parser(
-      name = "removedAnalysis",
-      description = "delete listed analysis ids"
-    ).addPositional(
-      name = "analysisIds",
-      description = "csv list of ids or file containing list of ids"
-    ).addDefault[(ParsingResult, Config) => Unit]("func", deleteAnalysisMain)
-  }
-
-  private def createRunParser(): Parser = {
+object RunParser {
+  def createParser: Parser = {
     Parser(
       name = "run",
       description = "run an action/analysis"
@@ -69,12 +33,12 @@ class AppAnalyzerParser {
         short = "d",
         description = "if provided specifies the devices in adb"
       )
-      .addSubparser(createAppManifestParser())
-      .addSubparser(createFunctionalityCheckParser())
-      .addSubparser(createPluginParser())
+      .addSubparser(createAppManifestParser)
+      .addSubparser(createFunctionalityCheckParser)
+      .addSubparser(createPluginParser)
   }
 
-  private def createFunctionalityCheckParser(): Parser = {
+  private def createFunctionalityCheckParser: Parser = {
     Parser(
       name = "functionalityCheck",
       description =
@@ -82,46 +46,16 @@ class AppAnalyzerParser {
     ).addDefault[(ParsingResult, Config) => Unit]("func", functionalityCheck)
   }
 
-  private def createPluginParser(): Parser = {
-    val pluginParser = Parser(
+  private def createPluginParser: Parser = {
+    Parser(
       name = "plugin",
       description = "run an analysis using a plugin"
     )
-
-    pluginParser
       .addPositional(
         name = "plugin",
         description =
           "the name of the actor plugin providing the analysis capabilities"
       )
-
-    addFlags(pluginParser)
-    addOptions(pluginParser)
-
-    pluginParser
-      .addDefault[(ParsingResult, Config) => Unit](
-        "func",
-        runPluginExperiment,
-        "runs an experiment using the specified plugin"
-      )
-  }
-
-  private def createAppManifestParser(): Parser = {
-    Parser("manifest")
-      .addSubparser(
-        Parser(
-          "update",
-          "updates the manifest file for the provided app data collection"
-        )
-          .addDefault[(ParsingResult, Config) => Unit](
-            "func",
-            updateOrCreateManifestMain
-          )
-      )
-  }
-
-  private def addFlags(parser: Parser): Parser = {
-    parser
       .addFlag(
         name = "ephemeral",
         short = "e",
@@ -139,10 +73,6 @@ class AppAnalyzerParser {
         short = "n",
         description = "if set there is no check if the app is running"
       )
-  }
-
-  private def addOptions(parser: Parser): Parser = {
-    parser
       .addOptional(
         name = "only",
         short = "o",
@@ -179,6 +109,26 @@ class AppAnalyzerParser {
         default = None,
         description = "a csv list of <key>=<value> pairs"
       )
+      .addDefault[(ParsingResult, Config) => Unit](
+        "func",
+        runPluginExperiment,
+        "runs an experiment using the specified plugin"
+      )
   }
 
+  private def createAppManifestParser: Parser = {
+    Parser("manifest")
+      .addSubparser(createUpdateParser)
+  }
+
+  private def createUpdateParser: Parser = {
+    Parser(
+      "update",
+      "updates the manifest file for the provided app data collection"
+    )
+      .addDefault[(ParsingResult, Config) => Unit](
+        "func",
+        updateOrCreateManifestMain
+      )
+  }
 }

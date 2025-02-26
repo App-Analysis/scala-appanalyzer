@@ -5,6 +5,7 @@ import de.halcony.appanalyzer.analysis.Analysis
 import de.halcony.appanalyzer.analysis.plugin.{ActorPlugin, PluginManager}
 import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
 import de.halcony.appanalyzer.database.Postgres
+import de.halcony.appanalyzer.parser.AppAnalyzerParser
 import de.halcony.appanalyzer.platform.appium.Appium
 import de.halcony.appanalyzer.platform.device.{
   AndroidDeviceDroidbot,
@@ -41,7 +42,7 @@ object AppAnalyzer extends LogSupport {
   private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(executorService)
 
-  private val parser: Parser = new AppAnalyzerParser().createParser()
+  private val parser: Parser = new AppAnalyzerParser().createParser
   // private object IgnoreMe extends Throwable
 
   /** main function parsing config and command line
