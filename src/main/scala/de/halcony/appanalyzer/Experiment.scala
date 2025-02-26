@@ -6,6 +6,8 @@ import de.halcony.appanalyzer.platform.exceptions.FatalError
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
 
+import java.nio.file.Path
+
 case class Experiment(id: Int, description: String)
 
 object Experiment extends LogSupport {
@@ -151,7 +153,7 @@ object Experiment extends LogSupport {
             row.string("app_id"),
             row.string("app_version"),
             MobileApp.stringToOsEnum(row.string("app_os")),
-            "N/A"
+            Path.of("N/A")
           )
         }
         .toList
