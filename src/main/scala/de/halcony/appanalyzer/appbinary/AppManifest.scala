@@ -199,7 +199,12 @@ object AppManifest extends LogSupport {
 
       info("try parsing to manifest json")
       try {
-        manifest = JsonParser(lines).asInstanceOf[AppManifest]
+        val manifestFile = JsonParser(lines).asInstanceOf[Manifest]
+        manifest = new AppManifest(
+          manifestFilePath,
+          manifestFile.appFolderPath,
+          manifestFile.apps
+        )
         sanityCheck(manifest)
       } catch {
         case _: DeserializationException =>
