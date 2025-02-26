@@ -1,14 +1,10 @@
-import de.halcony.appanalyzer.AppAnalyzerParser
+import de.halcony.appanalyzer.parser.AppAnalyzerParser
 import de.halcony.argparse.ParsingResult
-
 import org.scalatest.flatspec._
-import org.scalatest.matchers._
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
-
 
 class AppAnalyzerParserSpec extends AnyFlatSpec {
   def parseArgs(args: Array[String]): ParsingResult = {
-    val parser = new AppAnalyzerParser().createParser()
+    val parser = AppAnalyzerParser.createParser
     parser.parse(args)
   }
 
