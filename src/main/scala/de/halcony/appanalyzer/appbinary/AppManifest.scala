@@ -272,7 +272,6 @@ object AppManifest extends LogSupport {
       update: Boolean
   )(implicit conf: Config): AppManifest = {
     val manifest = readManifest(appFolderPath, manifestFilePath)
-    manifest.appFolderPath = appFolderPath
     if (manifest.apps.isEmpty || update) {
       if (manifest.apps.isEmpty)
         info(s"the manifest was empty, running update based on app folder")
@@ -282,9 +281,10 @@ object AppManifest extends LogSupport {
       if (manifest.appFolderPath != appFolderPath) {
         saveOldManifest(manifest)
         info("setting new appFolderPath and clearing apps")
-        manifest.appFolderPath = appFolderPath
         manifest.apps.clear()
       }
+      manifest.appFolderPath = appFolderPath
+
       val contained = readInFolder(appFolderPath, platform)
       manifest.apps ++= contained
       manifest.apps.diff(contained).foreach(manifest.apps.remove)
