@@ -4,6 +4,8 @@ import de.halcony.appanalyzer.AppAnalyzer.deleteAnalysisMain
 import de.halcony.appanalyzer.Config
 import de.halcony.argparse.{Parser, ParsingResult}
 
+/** The parser for the DeleteAnalysis. Removes Analysis from the database.
+  */
 object DeletedAnalysisParser {
   def createParser: Parser = {
     Parser(

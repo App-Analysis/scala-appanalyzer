@@ -8,6 +8,9 @@ import de.halcony.appanalyzer.analysis.plugin.PluginManager.{
 }
 import de.halcony.argparse.{Parser, ParsingResult}
 
+/** The parser for the PluginManager. Manages the installed plugins. Moved from
+  * the PluginManager.
+  */
 object PluginManagerParser {
   def createParser: Parser = {
     Parser("plugin", "manage the installed plugins")

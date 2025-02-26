@@ -8,6 +8,10 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.AppManifest.updateOrCreateManifestMain
 import de.halcony.argparse.{Parser, ParsingResult}
 
+/** Decision tree parser for the possible actions that can be executed.
+  * Primarily used for running experiments, AppManifests or functionality
+  * checks.
+  */
 object RunParser {
   def createParser: Parser = {
     Parser(

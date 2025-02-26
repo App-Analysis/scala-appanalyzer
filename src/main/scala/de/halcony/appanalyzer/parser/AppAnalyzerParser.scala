@@ -1,8 +1,14 @@
 package de.halcony.appanalyzer.parser
 
-import de.halcony.appanalyzer.analysis.plugin.PluginManager
 import de.halcony.argparse.Parser
 
+/** The main parser for the AppAnalyzer Creates the PluginManagerParser,
+  * DeletedAnalysisParser and RunParser. Structure: an object without
+  * parenthesis with a method createParser method Sub-parsers are thematically
+  * new objects or new functions.
+  * @return
+  *   the main parser
+  */
 object AppAnalyzerParser {
   def createParser: Parser = {
     createMainParser
