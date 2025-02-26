@@ -47,21 +47,6 @@ class AppManifest(
 }
 
 object AppManifest extends LogSupport {
-  def writeAppManifestToFile(
-      manifest: AppManifest
-  ): Unit = {
-    try {
-      Files.write(
-        manifest.manifestFilePath,
-        Manifest(manifest.appFolderPath, manifest.apps).toJson.prettyPrint
-          .getBytes(StandardCharsets.UTF_8)
-      )
-    } catch {
-      case e: Exception =>
-        error(s"An error occurred while writing to file ${e.getMessage}")
-    }
-  }
-
   def updateOrCreateManifestMain(
       pargs: ParsingResult,
       conf: Config
