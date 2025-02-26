@@ -117,7 +117,9 @@ object AppManifest extends LogSupport {
       val version: String = APK(conf).getAppVersion(path.toString)
       Success(MobileApp(id, version, ANDROID, path))
     } catch {
-      case x: Throwable => Failure(x)
+      case x: Throwable =>
+        warn(s"analyzeApk failed for $path")
+        Failure(x)
     }
   }
 
