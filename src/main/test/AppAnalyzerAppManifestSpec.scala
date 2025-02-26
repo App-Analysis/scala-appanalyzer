@@ -1,9 +1,9 @@
-import de.halcony.appanalyzer.appbinary.AppManifest.{
-  sanityCheck,
-  writeAppManifestToFile
+import de.halcony.appanalyzer.appbinary.AppManifest.sanityCheck
+import de.halcony.appanalyzer.appbinary.ManifestJsonProtocol.{
+  AppManifestFormat,
+  ManifestFormat
 }
-import de.halcony.appanalyzer.appbinary.ManifestJsonProtocol.AppManifestFormat
-import de.halcony.appanalyzer.appbinary.{AppManifest, MobileApp}
+import de.halcony.appanalyzer.appbinary.{AppManifest, Manifest, MobileApp}
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems
 import org.scalatest.flatspec._
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
@@ -11,6 +11,7 @@ import spray.json._
 
 import java.nio.file.{Files, Path}
 import scala.collection.mutable
+import scala.io.Source
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 class AppAnalyzerAppManifestSpec extends AnyFlatSpec {
@@ -38,6 +39,11 @@ class AppAnalyzerAppManifestSpec extends AnyFlatSpec {
     val files = getApps(path)
     println(files)
     files.foreach(println)
+  }
+
+  it should "not detect non existing files" in {
+    val path = Path.of("./non-existing")
+    Files.exists(path) should be(false)
   }
 
   "Manifest" should "serialize and back" in {
@@ -77,7 +83,7 @@ class AppAnalyzerAppManifestSpec extends AnyFlatSpec {
     )
   }
 
-  it should "write Manifest to file" in {
+  it should "write Manifest to file and serialize back" in {
     val mobileApp = MobileApp(
       "App1",
       "1.0",
@@ -85,17 +91,33 @@ class AppAnalyzerAppManifestSpec extends AnyFlatSpec {
       Path.of("/somewhere/on/device")
     )
     // Create an example AppManifest
+
+    val manifestPath = Path.of("./test/manifest.json")
     val manifest = new AppManifest(
-      Path.of("./test/manifest.json"),
+      manifestPath,
       Path.of("/path/to/file"),
       mutable.Set(
         mobileApp
       )
     )
     Path.of("./test").toFile.mkdirs()
-    Path.of("./test/manifest.json").toFile.delete()
+    manifestPath.toFile.delete()
+    manifest.writeManifestToFile()
 
-    writeAppManifestToFile(manifest)
+    // Read the file
+    val source = Source.fromFile(manifestPath.toString)
+
+    info("reading in lines")
+    var lines = ""
+    try {
+      lines = source.getLines().mkString
+    } catch {
+      case _: Throwable =>
+    } finally {
+      source.close()
+    }
+    println(lines.getClass)
+    println(lines.parseJson.convertTo[Manifest])
   }
 
   it should "be mutable" in {
