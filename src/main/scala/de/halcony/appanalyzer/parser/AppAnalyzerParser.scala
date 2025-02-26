@@ -3,7 +3,7 @@ package de.halcony.appanalyzer.parser
 import de.halcony.appanalyzer.analysis.plugin.PluginManager
 import de.halcony.argparse.Parser
 
-class AppAnalyzerParser {
+object AppAnalyzerParser {
   def createParser: Parser = {
     createMainParser
   }

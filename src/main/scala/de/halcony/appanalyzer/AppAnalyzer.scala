@@ -42,7 +42,7 @@ object AppAnalyzer extends LogSupport {
   private implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(executorService)
 
-  private val parser: Parser = new AppAnalyzerParser().createParser
+  private val parser: Parser = AppAnalyzerParser.createParser
   // private object IgnoreMe extends Throwable
 
   /** main function parsing config and command line
