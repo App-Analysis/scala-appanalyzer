@@ -75,15 +75,10 @@ object AppManifest extends LogSupport {
       conf: Config
   ): mutable.Set[MobileApp] = {
     val appPaths = getApps(path, device)
-    var remainingApps = appPaths.length
-    info(s"we detected $remainingApps app files in the provided folder")
+    info(s"we detected ${appPaths.length} app files in the provided folder")
     val future = Future.sequence {
       appPaths.map { appBinaryPath =>
-        val result = Future {
-          analyzeAppBinary(appBinaryPath, device)(conf)
-        }
-        info(s"remaining apps: ${remainingApps -= 1}")
-        result
+        Future { analyzeAppBinary(appBinaryPath, device)(conf) }
       }
     }
     Await
