@@ -68,7 +68,6 @@ object AppManifest extends LogSupport {
     }
   }
 
-  // need to make paths as path object
   def updateOrCreateManifestMain(
       pargs: ParsingResult,
       conf: Config
@@ -177,7 +176,6 @@ object AppManifest extends LogSupport {
     }
   }
 
-  // sanity check, is the Manifest file path a sub-path for apps?
   private def readManifest(
       appFolderPath: Path,
       manifestFilePath: Path
@@ -303,6 +301,7 @@ object AppManifest extends LogSupport {
         manifest.apps.clear()
       }
       val contained = readInFolder(appFolderPath, platform)
+      manifest.apps ++= contained
       manifest.apps.diff(contained).foreach(manifest.apps.remove)
     }
     manifest
