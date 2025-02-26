@@ -118,7 +118,6 @@ object AppManifest extends LogSupport {
       Success(MobileApp(id, version, ANDROID, path))
     } catch {
       case x: Throwable =>
-        warn(s"analyzeApk failed for $path")
         Failure(x)
     }
   }
