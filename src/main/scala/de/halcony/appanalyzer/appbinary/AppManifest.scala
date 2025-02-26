@@ -1,13 +1,16 @@
 package de.halcony.appanalyzer.appbinary
 
-import de.halcony.appanalyzer.Config.StringJsonFormat
 import de.halcony.appanalyzer.appbinary.ManifestJsonProtocol.ManifestFormat
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, IOS, PlatformOS}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
+  ANDROID,
+  IOS,
+  PlatformOS
+}
 import de.halcony.appanalyzer.{Config, appbinary}
 import de.halcony.argparse.{OptionalValue, ParsingResult}
-import spray.json.{DeserializationException, JsObject, JsString, JsonParser, enrichAny}
+import spray.json._
 import wvlet.log.LogSupport
 
 import java.nio.charset.StandardCharsets
@@ -190,7 +193,7 @@ object AppManifest extends LogSupport {
 
       info("try parsing to manifest json")
       try {
-        val manifestFile = lines.toJson.convertTo[Manifest]
+        val manifestFile = lines.parseJson.convertTo[Manifest]
         manifest = new AppManifest(
           manifestFilePath,
           manifestFile.appFolderPath,
