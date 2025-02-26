@@ -36,22 +36,22 @@
   "db" : {
     "host" : "localhost",
     "port" : 5432,
-    "name" : "db_name",
-    "user" : "db_user",
-    "pwd"  : "db_pwd"
+    "name" : "hytrack",
+    "user" : "hytracker",
+    "pwd"  : "1234567890"
   },
   "devicePrep" : {
     "clipboard" : "sd325fEr23q2",
-    "latitude" : 16.0000,
-    "longitude" : 17.000,
-    "altitude" : 100.000
+    "latitude" : 0.0000,
+    "longitude" : 0.000,
+    "altitude" : 0.000
   },
   "android" : {
     "dexdump" : "dexdump",
     "adb" : "adb",
     "appium" : true,
     "objection" : "objection",
-    "osVersion" : "12",
+    "osVersion" : "14",
     "apkanalyzer" : "apkanalyzer"
   },
   "ios" : {

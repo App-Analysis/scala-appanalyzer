@@ -211,7 +211,7 @@ object AppManifest extends LogSupport {
       } else {
         if (!path.endsWith(suffix)) {
           throw new RuntimeException(
-            s"if you do not provide a folder of files the file needs to end with '$suffix'"
+            s"for '$path': if you do not provide a folder of files the file needs to end with '$suffix'"
           )
         } else {
           List(path.toString)

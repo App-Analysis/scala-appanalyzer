@@ -375,6 +375,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       cleanObjectionProcess()
       val cmd =
         s"${conf.android.objection} $getDeviceConfStringObjection --gadget $appId explore --startup-command 'android sslpinning disable'"
+      info(cmd)
       val process = Process(cmd)
       objection = Some(
         process.run(
