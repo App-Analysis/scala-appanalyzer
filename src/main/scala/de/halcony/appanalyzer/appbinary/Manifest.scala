@@ -53,7 +53,7 @@ object ManifestJsonProtocol extends DefaultJsonProtocol {
       override def read(json: JsValue): PlatformOS = json match {
         case JsString("android") => ANDROID
         case JsString("ios")     => IOS
-        case JsString(os) =>
+        case os =>
           throw DeserializationException(s"Unknown OS: $os")
       }
     }
