@@ -297,7 +297,7 @@ object AppManifest extends LogSupport {
     val currentTimeFormatter = {
       DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
     }
-    val manifestPath = manifest.appFolderPath.resolve(
+    val manifestPath = manifest.manifestFilePath.getParent.resolve(
       s"manifest_${currentTime.format(currentTimeFormatter)}.json"
     )
     warn(
