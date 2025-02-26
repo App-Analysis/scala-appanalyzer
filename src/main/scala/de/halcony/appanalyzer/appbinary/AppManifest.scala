@@ -145,7 +145,7 @@ object AppManifest extends LogSupport {
           stream
             .filter(Files.isRegularFile(_)) // Keep only regular files
             .filter(filePath =>
-              filePath.getFileName.toString.endsWith(".stl")
+              filePath.getFileName.toString.endsWith(suffix)
             ) // Check suffix
             .map(_.toString) // Convert Path to String
             .iterator() // Convert Stream[Path] to an Iterator
