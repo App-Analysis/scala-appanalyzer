@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1.3
-
 # Basis-Image
 FROM ubuntu:22.04
 
@@ -68,6 +67,7 @@ RUN apt-get update && apt-get install -y \
     python3.11-venv \
     python3-venv
     
+# Create user and grant sudo permissions
 RUN useradd -m -d /home/ias -s /bin/bash -G sudo ias && \
     echo "ias ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -107,9 +107,11 @@ ENV PATH="/venv/bin:$PATH"
 # Install libimobiledevice (for iOS-Communication)
 RUN apt-get update && apt-get install -y libimobiledevice-utils && apt-get clean
 
+# Clone scala-appanalyzer repository
 RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN --mount=type=ssh git clone git@github.com:App-Analysis/scala-appanalyzer.git /home/ias/scala-appanalyzer
 
+# Change user
 USER ias
 WORKDIR /home/ias
 
