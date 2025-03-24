@@ -60,7 +60,7 @@ sudo docker run --privileged -it --rm \
 
 ### Useful Information
 
-Here I am writing down some information that was important to me.
+Here I am writing down some information that could be helpful for you.
 
 #### Database
 
