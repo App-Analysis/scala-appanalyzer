@@ -85,7 +85,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     npm install -g npm@8
     
 # Install Frida and Appium
-RUN npm install -g frida
+RUN npm install -g frida@16.4.2
 
 # Install `atob` (Base64 Decoder/Encoder)
 RUN npm install -g atob
