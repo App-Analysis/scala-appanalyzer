@@ -9,6 +9,7 @@ from mitmproxy.coretypes import multidict
 import psycopg2
 from psycopg2.extras import execute_values
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -16,7 +17,7 @@ load_dotenv()
 
 def mdv_to_dict(mdv: multidict) -> dict:
     """
-    mitmproxy uses an internal datastructure which allows multiple values for one key.
+    mitmproxy uses an internal data structure which allows multiple values for one key.
     This function converts this into a (key, array) dict. It tries to decode the values and keys as well.
     """
     tmp = dict()
@@ -41,7 +42,6 @@ class MitmAddon:
         self.conn = None
         self.cur = None
         self.run_id = -1
-        self.request_id = -1
 
     # logging tls connection issues to improve ssl pinning deactivation and keep an idea what is failing
     def tls_failed_client(self, data: mitmproxy.tls.TlsData):
@@ -54,15 +54,14 @@ class MitmAddon:
 
     def request(self, flow: http.HTTPFlow):
         r: http.HTTPRequest = flow.request
+        request_id = flow.id
         self.cur.execute(
-            "INSERT INTO request (run, start_time, host, port, method, scheme, authority, path, http_version, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
-            (self.run_id, datetime.fromtimestamp(r.timestamp_start), r.pretty_host, r.port, r.method, r.scheme,
+            "INSERT INTO request (id, run, start_time, host, port, method, scheme, authority, path, http_version, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+            (request_id, self.run_id, datetime.fromtimestamp(r.timestamp_start), r.pretty_host, r.port, r.method, r.scheme,
              r.authority,
              r.path,
              r.http_version, r.content))
-        request_id: int = self.cur.fetchone()[0]
         self.conn.commit()
-        self.request_id = request_id
         # logger.info(f"Request id in request: {request_id}")
         # try to decode the content and update the row
         try:
@@ -96,13 +95,13 @@ class MitmAddon:
 
     def response(self, flow: http.HTTPFlow):
         r: http.HTTPRequest = flow.response
-        request_id = self.request_id
+        request_id = flow.id
+        response_id = str(uuid.uuid4())
         # logger.info(f"Request ID in response: {request_id}")
         self.cur.execute(
-            "INSERT INTO response (run, request, start_time, http_version, status_code, reason, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s) RETURNING id;",
-            (self.run_id, request_id, datetime.fromtimestamp(r.timestamp_start), r.http_version, r.status_code, r.reason,
+            "INSERT INTO response (response_id, run, request, start_time, http_version, status_code, reason, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+            (response_id, self.run_id, request_id, datetime.fromtimestamp(r.timestamp_start), r.http_version, r.status_code, r.reason,
             r.content))
-        response_id: int = self.cur.fetchone()[0]
         self.conn.commit()
         # try to decode the content and update the row
         try:

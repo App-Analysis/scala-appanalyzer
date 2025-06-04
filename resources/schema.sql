@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS TrafficCollection (
 
 DROP TABLE IF EXISTS Request CASCADE;
 CREATE TABLE IF NOT EXISTS Request (
-                                       id Serial,
+                                       id varchar,
                                        run Integer,
                                        start_time timestamp with time zone,
                                        method varchar,
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS Request (
 DROP TABLE IF EXISTS Header CASCADE;
 CREATE TABLE IF NOT EXISTS Header (
                                       id SERIAL,
-                                      request Integer,
+                                      request varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS Header (
 DROP TABLE IF EXISTS Cookie CASCADE;
 CREATE TABLE IF NOT EXISTS Cookie (
                                       id SERIAL,
-                                      request Integer,
+                                      request varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS Cookie (
 DROP TABLE IF EXISTS Trailer CASCADE;
 CREATE TABLE IF NOT EXISTS Trailer(
                                       id SERIAL,
-                                      request Integer,
+                                      request varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -203,9 +203,9 @@ CREATE TABLE IF NOT EXISTS Trailer(
 
 DROP TABLE IF EXISTS Response CASCADE;
 CREATE TABLE IF NOT EXISTS Response (
-                                       id Serial,
+                                       id varchar,
                                        run Integer,
-                                       request Integer,
+                                       request varchar,
                                        start_time timestamp with time zone,
                                        http_version varchar,
                                        status_code Integer,
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS Response (
 DROP TABLE IF EXISTS ResponseHeader CASCADE;
 CREATE TABLE IF NOT EXISTS ResponseHeader (
                                       id SERIAL,
-                                      response Integer,
+                                      response varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS ResponseHeader (
 DROP TABLE IF EXISTS ResponseCookie CASCADE;
 CREATE TABLE IF NOT EXISTS ResponseCookie (
                                       id SERIAL,
-                                      response Integer,
+                                      response varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS ResponseCookie (
 DROP TABLE IF EXISTS ResponseTrailer CASCADE;
 CREATE TABLE IF NOT EXISTS ResponseTrailer(
                                       id SERIAL,
-                                      response Integer,
+                                      response varchar,
                                       name varchar,
                                       values varchar,
                                       PRIMARY KEY (id),
