@@ -1,10 +1,9 @@
 import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.analysis.plugin.RemotePluginConfig
-import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
-class TestConfig extends AnyFlatSpec with should.Matchers {
+class AppAnalyzerConfigSpec extends AnyFlatSpec with should.Matchers {
   "Config" should "be loaded" in {
     val conf = Config.parse("example.config.json")
     conf.timeoutMilli should be(900000)

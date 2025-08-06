@@ -1,115 +1,106 @@
 package de.halcony.appanalyzer.appbinary
 
+import de.halcony.appanalyzer.appbinary.ManifestJsonProtocol.ManifestFormat
 import de.halcony.appanalyzer.appbinary.apk.APK
-import de.halcony.appanalyzer.{Config, appbinary}
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
   ANDROID,
-  PlatformOS,
-  IOS
+  IOS,
+  PlatformOS
 }
-import de.halcony.argparse.{Parser, ParsingResult}
-import spray.json.{JsObject, JsString, JsonParser}
+import de.halcony.appanalyzer.{Config, appbinary}
+import de.halcony.argparse.{OptionalValue, ParsingResult}
+import spray.json._
 import wvlet.log.LogSupport
-import java.io.{File, FileWriter}
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import scala.collection.mutable
-import scala.io.Source
-import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration.Inf
 import scala.concurrent.{Await, Future}
+import scala.io.Source
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.util.{Failure, Success, Try}
 
-class AppManifest extends LogSupport {
+// todo: im pretty sure we dont need a mutable set here, a normal set is enough we just have to make it writable
 
-  private val manifest: MMap[String, MobileApp] = mutable.Map()
-
-  /** add a MobileApp to the manifest
+/** The AppManifest represents a full manifest. This includes the save path, the
+  * apps as MobileApp representation and the appFolderPath, acting as a
+  * sanityCheck for the apps. If the appFolderPath is different from the path of
+  * the apps the app the sanityCheck will fail.
   *
-  * @param appId the unique identifier for the app
-  * @param app the MobileApp instance to be added
-  * @param force if true, adds the app even if an entry with the same ID exists
-  * @return true if the app was added, false otherwise
+  * @param manifestFilePath
+  *   the path where the manifest file is saved to, if the file already exists
+  *   we try to read it
+  * @param appFolderPath
+  *   the path to the folder containing the apps
+  * @param apps
+  *   the set of apps returned by analyzeAPK (serialized fields can be seen in
+  *   Manifest the serialize class for AppManifest)
   */
-  def addApp(appId: String, app: MobileApp, force: Boolean = false): Boolean = {
-    if (!manifest.contains(appId) || force) {
-      manifest.addOne(appId -> app)
-      true
-    } else {
-      false
-    }
-  }
+class AppManifest(
+    val manifestFilePath: Path,
+    var appFolderPath: Path,
+    val apps: mutable.Set[MobileApp]
+) extends LogSupport {
 
-  /** remove a MobileApp from the manifest
-  *
-  * @param appId the unique identifier of the app to remove
-  * @return true if the removal was successful or if the app did not exist
-  */
-  def removeApp(appId: String): Boolean = {
-    if (!manifest.contains(appId)) {
-      warn(s"there is no app $appId in the manifest to be removed")
-      true
-    } else {
-      manifest.remove(appId)
-      true
-    }
-  }
-
-  /** write the current manifest to a JSON file
-  *
-  * @param manifestFilePath the file path where the manifest should be written
-  */
-  def writeManifestFile(manifestFilePath: String): Unit = {
-    val file = new FileWriter(new File(manifestFilePath))
+  /** writes a manifest to a file using the JSON serialization from the manifest
+    * class. It uses the internal parameter manifestFilePath as the path to
+    * write to.
+    *
+    * @param manifestFilePath
+    *   the path to write the manifest to, can be overridden in case we want to
+    *   write to a different file, the use case I found was when we want to dump
+    *   an old manifest file as backup and not immediately overwrite it with the
+    *   new manifest
+    */
+  def writeManifestToFile(
+      manifestFilePath: Path = this.manifestFilePath
+  ): Unit = {
     try {
-      file.write(JsObject(this.getManifest.map { case (path, app) =>
-        path -> JsObject(
-          "id" -> JsString(app.id),
-          "version" -> JsString(app.version),
-          "os" -> JsString(app.getOsString),
-          "path" -> JsString(app.serializedPath)
-        )
-      }).prettyPrint)
-    } finally {
-      file.flush()
-      file.close()
+      Files.write(
+        manifestFilePath,
+        Manifest(this.appFolderPath, this.apps).toJson.prettyPrint
+          .getBytes(StandardCharsets.UTF_8)
+      )
+    } catch {
+      case e: Exception =>
+        error(s"An error occurred while writing to file ${e.getMessage}")
     }
   }
+
 
   /** retrieve an immutable map representing the current manifest
   *
   * @return a map of app IDs to MobileApp instances
   */
   def getManifest: Map[String, MobileApp] = manifest.toMap
-
 }
 
 object AppManifest extends LogSupport {
 
-  val parser: Parser = Parser("manifest")
-    .addSubparser(
-      Parser(
-        "update",
-        "updates the manifest file for the provided app data collection"
-      )
-        .addDefault[(ParsingResult, Config) => Unit](
-          "func",
-          updateOrCreateManifestMain
-        )
-    )
-
-  /** update or create the manifest file based on provided command line arguments
-  *
-  * @param pargs the parsing results containing command line arguments
-  * @param conf the configuration settings
-  */
-  private def updateOrCreateManifestMain(
+  /** Updates or creates a manifest file based on the provided arguments. The
+    * default path for the manifest is appFolder/manifest.json. We make use of
+    * the java.nio package to resolve paths as we ran into
+    * appFolder//manifest.json issues.
+    * @param pargs
+    *   parameter from the command line parser
+    * @param conf
+    *   parameter from the configuration file
+    */
+  def updateOrCreateManifestMain(
       pargs: ParsingResult,
       conf: Config
   ): Unit = {
-    val appFolder: String = pargs.getValue[String]("path")
+    val appFolder: Path = Path.of(pargs.getValue[String]("path"))
     val manifestFilePath =
-      pargs.getValueOrElse[String]("manifest", appFolder + "/manifest.json")
+      pargs.get[OptionalValue[String]]("manifest").value match {
+        case Some(value) => Path.of(value)
+        case None        => appFolder.resolve("/manifest.json")
+      }
     val platform: PlatformOS = pargs.getValue[String]("platform") match {
       case "android_device" | "android_device_non_root" | "android_emulator" =>
         ANDROID
@@ -121,24 +112,29 @@ object AppManifest extends LogSupport {
     }
     info(s"creating manifest file $manifestFilePath for $appFolder")
     AppManifest(appFolder, manifestFilePath, platform, update = true)(conf)
-      .writeManifestFile(manifestFilePath)
+      .writeManifestToFile()
   }
 
-  /** read and analyze all app files in the specified folder asynchronously
-  *
-  * @param path the path to the folder containing app files
-  * @param device the target platform operating system
-  * @param conf implicit configuration settings
-  * @return a list of successfully analyzed MobileApp objects
-  */
-  private def readInFolder(path: String, device: PlatformOS)(implicit
+  /** Not changed. Creates futures for analyzeAppBinary which extracts .apk
+    * files to MobileApps
+    *
+    * @param path
+    *   the apk folder/file path
+    * @param device
+    *   the platform operating system
+    * @param conf
+    *   parameter from the configuration file
+    * @return
+    *   a mutable set of MobileApps for which the extraction was successful
+    */
+  private def readInFolder(path: Path, device: PlatformOS)(implicit
       conf: Config
-  ): List[MobileApp] = {
+  ): mutable.Set[MobileApp] = {
     val appPaths = getApps(path, device)
     info(s"we detected ${appPaths.length} app files in the provided folder")
     val future = Future.sequence {
       appPaths.map { appBinaryPath =>
-        Future { anlyzeAppBinary(appBinaryPath, device)(conf) }
+        Future { analyzeAppBinary(appBinaryPath, device)(conf) }
       }
     }
     Await
@@ -151,18 +147,15 @@ object AppManifest extends LogSupport {
           true
       }
       .map(_.get)
+      .to(mutable.Set)
   }
 
-  /** analyze an app binary file and create a MobileApp object
-  *
-  * Depending on the platform, it performs an Android APK analysis or returns a failure for iOS.
-  *
-  * @param path the path to the app binary file
-  * @param device the target platform operating system
-  * @param conf implicit configuration settings
-  * @return a Try containing the MobileApp object or an error
-  */
-  private def anlyzeAppBinary(
+
+  /** Not changed. Analyzes the app binary and returns a MobileApp object.
+    * @return
+    *   A try object of an app, depending on success or failure
+    */
+  private def analyzeAppBinary(
       path: String,
       device: PlatformOperatingSystems.PlatformOS
   )(implicit
@@ -173,53 +166,64 @@ object AppManifest extends LogSupport {
         Failure(
           new NotImplementedError()
         ) // todo: at some point we might want to do iOS again
-      case PlatformOperatingSystems.ANDROID => analyzeApk(path)
+      case PlatformOperatingSystems.ANDROID => analyzeApk(Path.of(path))
     }
   }
 
-  /** analyze an Android APK file to extract app ID and version
-  *
-  * @param path the path to the APK file
-  * @param conf implicit configuration settings
-  * @return a Try containing the MobileApp object if successful, or an error
-  */
+
+  /** not changed uses the apk config to invoke dexdump
+    * @return
+    *   a success or failure object of a MobileApp
+    */
   protected def analyzeApk(
-      path: String
+      path: Path
   )(implicit conf: Config): Try[MobileApp] = {
     try {
-      val id: String = APK(conf).getAppId(path)
-      val version: String = APK(conf).getAppVersion(path)
+      val id: String = APK(conf).getAppId(path.toString)
+      val version: String = APK(conf).getAppVersion(path.toString)
       Success(MobileApp(id, version, ANDROID, path))
     } catch {
-      case x: Throwable => Failure(x)
+      case x: Throwable =>
+        Failure(x)
     }
   }
-
-  /** retrieve a list of app files based on the provided path and target platform
-  *
-  * If the path is a directory, all files with the appropriate suffix (.apk for Android, .ipa for iOS) are returned.
-  * If a file is provided, it must have the correct suffix.
-  *
-  * @param path the directory or file path
-  * @param device the target platform operating system
-  * @return a list of paths to app files
-  */
-  protected def getApps(path: String, device: PlatformOS): List[String] = {
-    def getFilesOrFileEndingWith(path: String, suffix: String): List[String] = {
-      if (new File(path).isDirectory) {
-        new File(path)
-          .listFiles()
-          .filter(_.isFile)
-          .filter(_.getPath.endsWith(suffix))
-          .map(_.getPath)
-          .toList
+    
+  /** Get the apps from the provided path. If the path is a directory we return
+    * all files ending with the suffix. If the path is a file we return the file
+    * if it ends with the suffix. Using the Java NIO package to handle paths and
+    * files. Enables streaming/buffering.
+    * @param path
+    *   path to the folder or file
+    * @param device
+    *   the platform operating system
+    * @return
+    *   a list of strings representing the paths to the apps
+    */
+  protected def getApps(path: Path, device: PlatformOS): List[String] = {
+    def getFilesOrFileEndingWith(path: Path, suffix: String): List[String] = {
+      if (Files.isDirectory(path)) {
+        val stream = Files.list(path)
+        try {
+          // Filter the files
+          stream
+            .filter(Files.isRegularFile(_)) // Keep only regular files
+            .filter(filePath =>
+              filePath.getFileName.toString.endsWith(suffix)
+            ) // Check suffix
+            .map(_.toString) // Convert Path to String
+            .iterator() // Convert Stream[Path] to an Iterator
+            .asScala // Convert to a Scala collection for compatibility
+            .toList // Collect to List
+        } finally {
+          stream.close() // Ensure the stream is closed
+        }
       } else {
         if (!path.endsWith(suffix)) {
           throw new RuntimeException(
             s"for '$path': if you do not provide a folder of files the file needs to end with '$suffix'"
           )
         } else {
-          List(path)
+          List(path.toString)
         }
       }
     }
@@ -229,109 +233,222 @@ object AppManifest extends LogSupport {
     }
   }
 
-  /** read the existing manifest from a JSON file and convert it into a map
-  *
-  * If the manifest file exists, its contents are parsed into MobileApp objects;
-  * otherwise, an empty map is returned.
-  *
-  * @param manifestFilePath the file path of the manifest
-  * @return a map of file paths to MobileApp objects
-  */
-  private def readManifest(manifestFilePath: String): Map[String, MobileApp] = {
-    if (new File(manifestFilePath).exists) {
+  /** Reads the manifest file if it exists and returns the manifest object. If
+    * the manifest cannot be read we try again using the old manifest format. If
+    * that fails we return an empty manifest.
+    * @param appFolderPath
+    *   the path to the folder containing the apps
+    * @param manifestFilePath
+    *   the path to the manifest file
+    * @return
+    *   an AppManifestObject with the apps, appFolderPath and manifestFilePath
+    */
+  private def readManifest(
+      appFolderPath: Path,
+      manifestFilePath: Path
+  ): AppManifest = {
+    var manifest: AppManifest =
+      new AppManifest(manifestFilePath, appFolderPath, mutable.Set())
+    if (Files.exists(manifestFilePath)) {
       info("detected app manifest")
-      val source = Source.fromFile(manifestFilePath)
+      val source = Source.fromFile(manifestFilePath.toString)
+
+      info("reading in lines")
+      var lines = ""
       try {
-        JsonParser(source.getLines().mkString("\n"))
-          .asInstanceOf[JsObject]
-          .fields
-          .map {
-            case (path: String, app: JsObject) =>
-              path -> appbinary.MobileApp(
-                app.fields("id").asInstanceOf[JsString].value,
-                app.fields("version").asInstanceOf[JsString].value,
-                app
-                  .fields("os")
-                  .asInstanceOf[JsString]
-                  .value
-                  .toLowerCase match {
-                  case "android" => PlatformOperatingSystems.ANDROID
-                  case "ios"     => PlatformOperatingSystems.IOS
-                },
-                app.fields("path").asInstanceOf[JsString].value
-              )
-            case _ =>
-              error("manifest seems broken")
-              "NO" -> appbinary.MobileApp("NO", "NO", ANDROID, "NO")
-          }
-          .filter { case (path, _) => path != "NO" }
+        lines = source.getLines().mkString("\n")
+      } catch {
+        case _: Throwable =>
+          error("could not read in lines")
       } finally {
         source.close()
       }
-    } else {
-      Map()
+
+      info("try parsing to manifest json")
+      try {
+        val manifestFile = lines.parseJson.convertTo[Manifest]
+        manifest = new AppManifest(
+          manifestFilePath,
+          manifestFile.appFolderPath,
+          manifestFile.apps
+        )
+        sanityCheck(manifest)
+      } catch {
+        case _: DeserializationException =>
+          info("could not parse to manifest json, retrying with legacy format")
+          val app_list: Map[String, MobileApp] = readLegacyManifest(lines)
+          manifest = new AppManifest(
+            manifestFilePath,
+            appFolderPath,
+            app_list.values.to(mutable.Set)
+          )
+          sanityCheck(manifest)
+      }
+    }
+    manifest
+  }
+
+  /** Reads legacy manifest file, which is a json object with the path as key
+    * and the app as value, weird...
+    * @param data
+    *   the string representation of the manifest
+    * @return
+    */
+  private def readLegacyManifest(data: String): Map[String, MobileApp] = {
+    try {
+      JsonParser(data)
+        .asInstanceOf[JsObject]
+        .fields
+        .map {
+          case (path: String, app: JsObject) =>
+            path -> appbinary.MobileApp(
+              app.fields("id").asInstanceOf[JsString].value,
+              app.fields("version").asInstanceOf[JsString].value,
+              app
+                .fields("os")
+                .asInstanceOf[JsString]
+                .value
+                .toLowerCase match {
+                case "android" => PlatformOperatingSystems.ANDROID
+                case "ios"     => PlatformOperatingSystems.IOS
+              },
+              Path.of(app.fields("path").asInstanceOf[JsString].value)
+            )
+          case _ =>
+            error("manifest seems broken")
+            "NO" -> appbinary.MobileApp("NO", "NO", ANDROID, Path.of("NO"))
+        }
+        .filter { case (path, _) => path != "NO" }
+    } catch {
+      case _: Throwable =>
+        error("could not parse legacy manifest")
+        Map[String, MobileApp]()
     }
   }
 
-  /** create an AppManifest using the app folder path and target platform
-  *
-  * The manifest file is assumed to be located at "appFolderPath/manifest.json".
-  *
-  * @param appFolderPath the path to the folder containing app files
-  * @param platform the target platform operating system
-  * @param update indicates whether to update the manifest
-  * @param conf implicit configuration settings
-  * @return an AppManifest object representing the current state
-  */
-  def apply(appFolderPath: String, platform: PlatformOS, update: Boolean)(
-      implicit conf: Config
+  /** Checks if the app paths are sub-paths of the app folder path
+    * @param manifest
+    *   the manifest to check
+    */
+  def sanityCheck(manifest: AppManifest): Unit = {
+    val appFolderPathNormalized = manifest.appFolderPath.normalize()
+    manifest.apps.foreach(app => {
+      val appPath = app.path.normalize()
+      if (!appPath.startsWith(appFolderPathNormalized)) {
+        throw new RuntimeException(
+          s"the app path $appPath is not a sub-path of the app folder path $appFolderPathNormalized"
+        )
+      }
+    })
+  }
+
+  /** used for the Manifest serialization, only used for serialization not
+    * deserialization because this would set the manifest file path to
+    * ./manifest.json
+    * @param appFolderPath
+    *   the path to the folder containing the apps
+    * @param apps
+    *   the set of apps returned by analyzeAPK
+    *
+    * @return
+    *   an AppManifest object
+    */
+  def apply(appFolderPath: Path, apps: mutable.Set[MobileApp]): AppManifest = {
+    new AppManifest(
+      Path.of("./manifest.json"),
+      appFolderPath,
+      apps
+    )
+  }
+
+  /** When no manifestFilePath is supplied we assume the default path to be
+    * appFolderPath/manifest.json this might run into permission issues if the
+    * apps lie on a read only storage -> we can supply a manifestFilePath
+    * @param appFolderPath
+    *   the path to the folder containing the apps
+    * @param platform
+    *   the platform operating system
+    * @param update
+    *   if we want to force an update
+    * @param conf
+    *   the configuration file values
+    * @return
+    */
+  def apply(appFolderPath: Path, platform: PlatformOS, update: Boolean)(implicit
+      conf: Config
   ): AppManifest = {
     AppManifest(
       appFolderPath,
-      appFolderPath + "/manifest.json",
+      appFolderPath.resolve("/manifest.json"),
       platform,
       update
     )
   }
 
-  // todo we need to include the path to the app folder in the manifest to ensure that we do not use the wrong manifest for an app set
-
-  /** create an AppManifest using specified paths and target platform
-  *
-  * Loads the existing manifest if available, and updates it based on the app folder contents
-  * if it is empty or if an update is forced.
-  *
-  * @param appFolderPath the folder containing the app files
-  * @param manifestFilePath the file path of the manifest
-  * @param platform the target platform operating system
-  * @param update indicates whether to force an update of the manifest
-  * @param conf implicit configuration settings
-  * @return an updated AppManifest object
-  */
+  /** Invokes the read an/or update of the manifest file.
+    *   1. we try to read the file if it exists and if it has the new or old
+    *      format 2. if empty or update we update 2.1. if the app folder path is
+    *      different from the manifest app folder path we dump the old manifest
+    *      and clear the manifest 3. we read in the apps from the folder and
+    *      update the manifest 4. we return the manifest
+    *
+    * @param appFolderPath
+    *   the path to the folder containing the apps
+    * @param manifestFilePath
+    *   the path to the manifest file
+    * @param platform
+    *   the platform operating system
+    * @param update
+    *   if we want to force an update
+    * @param conf
+    *   the configuration file values
+    * @return
+    */
   def apply(
-      appFolderPath: String,
-      manifestFilePath: String,
+      appFolderPath: Path,
+      manifestFilePath: Path,
       platform: PlatformOS,
       update: Boolean
   )(implicit conf: Config): AppManifest = {
-    val manifest = new AppManifest()
-    readManifest(manifestFilePath).foreach { case (name, app) =>
-      manifest.addApp(name, app)
-    }
-    if (manifest.getManifest.isEmpty || update) {
-      if(manifest.getManifest.isEmpty)
-        info(s"the manifest at '$manifestFilePath' in '$appFolderPath' was empty, running update based on app folder")
+    val manifest = readManifest(appFolderPath, manifestFilePath)
+    if (manifest.apps.isEmpty || update) {
+      if (manifest.apps.isEmpty)
+        info(s"the manifest was empty, running update based on app folder")
       else
         info("we force an update based on the app folder")
-      val contained = readInFolder(appFolderPath, platform).map { app =>
-        info(s"adding app ${app.id}")
-        manifest.addApp(app.id, app)
-        app.id
+
+      if (manifest.appFolderPath != appFolderPath) {
+        saveOldManifest(manifest)
+        info("setting new appFolderPath and clearing apps")
+        manifest.apps.clear()
       }
-      manifest.getManifest.keySet
-        .filterNot(contained.contains)
-        .foreach(manifest.removeApp)
+      manifest.appFolderPath = appFolderPath
+
+      val contained = readInFolder(appFolderPath, platform)
+      manifest.apps ++= contained
+      manifest.apps.diff(contained).foreach(manifest.apps.remove)
     }
     manifest
+  }
+
+
+  /** Saves the old manifest to a new file with a timestamp before we overwrite
+    * it with the new manifest
+    *
+    * @param manifest
+    *   the old manifest to dump
+    */
+  private def saveOldManifest(manifest: AppManifest): Unit = {
+    val currentTime = LocalDateTime.now()
+    val currentTimeFormatter = {
+      DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+    }
+    val manifestPath = manifest.manifestFilePath.getParent.resolve(
+      s"manifest_${currentTime.format(currentTimeFormatter)}.json"
+    )
+    warn(
+      s"the app folder path in the manifest is different from the provided app folder path, dumping the old manifest to $manifestPath"
+    )
+    manifest.writeManifestToFile(manifestPath)
   }
 }

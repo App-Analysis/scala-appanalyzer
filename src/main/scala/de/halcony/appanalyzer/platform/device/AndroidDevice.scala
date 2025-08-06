@@ -4,21 +4,12 @@ import de.halcony.appanalyzer.Config
 import de.halcony.appanalyzer.appbinary.apk.APK
 import de.halcony.appanalyzer.appbinary.{Analysis, MobileApp}
 import de.halcony.appanalyzer.platform.frida.FridaScripts
-import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{
-  ANDROID,
-  PlatformOS
-}
-import de.halcony.appanalyzer.platform.exceptions.{
-  AppClosedItself,
-  FatalError,
-  FridaDied,
-  UnableToInstallApp,
-  UnableToStartApp,
-  UnableToUninstallApp
-}
+import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
+import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, FatalError, FridaDied, UnableToInstallApp, UnableToStartApp, UnableToUninstallApp}
 import wvlet.log.LogSupport
 
 import java.io.{BufferedWriter, FileWriter}
+import java.nio.file.Path
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, MILLISECONDS}
@@ -381,11 +372,11 @@ case class AndroidDevice(conf: Config, device: Option[String])
   * @throws UnableToInstallApp if the installation fails
   */
   override def installApp(app: MobileApp): Unit = {
-    info(s"installing on device ${app.path}")
+    info(s"installing on device ${app.escaped_path}")
     val stdio: ListBuffer[String] = ListBuffer()
     val stderr: ListBuffer[String] = ListBuffer()
     val cmd =
-      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.path}"
+      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.escaped_path}"
     val ret =
       if (conf.verbose) cmd.!
       else
@@ -449,7 +440,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
           increaseFailedInteractions()
           success = false
 
-          info(s"APP: $appId, LIST ${getInstalledApps}")
+          info(s"APP: $appId, LIST $getInstalledApps")
 
           if (!getInstalledApps.contains(appId)) {
             warn(s"the app $appId does not seem to be installed")
@@ -461,7 +452,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
         case x: Throwable =>
           if (uninstallProcess.isAlive()) uninstallProcess.destroy()
           throw UnableToUninstallApp(
-            MobileApp(appId, "NA", ANDROID, "NA"),
+            MobileApp(appId, "NA", ANDROID, Path.of("NA")),
             s"adb returned $ret\n${x.getMessage}\nSTDIO\n${stdio
                 .mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
           )
@@ -472,7 +463,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       case x =>
         error(s"final adb uninstall try resulted in ret code $x")
         throw UnableToUninstallApp(
-          MobileApp(appId, "NA", ANDROID, "NA"),
+          MobileApp(appId, "NA", ANDROID, Path.of("NA")),
           s"adb returned $ret\nSTDIO\n${stdio.mkString("\n")}\nSTDERR\n${stderr.mkString("\n")}"
         )
     }
