@@ -1,3 +1,5 @@
+# taken from http://appium.io/docs/en/latest/quickstart/test-py/
+
 import unittest
 from appium import webdriver
 from appium.webdriver.common.appiumby import AppiumBy

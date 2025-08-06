@@ -71,7 +71,7 @@ case class IPA(conf: Config) extends Analysis with LogSupport {
     *   if the metadata is missing and no default value is provided
     */
   override def getAppId(app: MobileApp, default: Option[String]): String = {
-    using(new ZipFile(new File(app.path))) { zipFile =>
+    using(new ZipFile(new File(app.escaped_path))) { zipFile =>
       val metadata = Option(zipFile.getEntry("iTunesMetadata.plist"))
       metadata match {
         case Some(data) =>
@@ -82,10 +82,10 @@ case class IPA(conf: Config) extends Analysis with LogSupport {
             .asInstanceOf[MetaDict]
           res.value("softwareVersionBundleId").asInstanceOf[MetaString].value
         case None =>
-          warn(s"file ${app.path} does not have an iTunesMetaData.plist")
+          warn(s"file ${app.escaped_path} does not have an iTunesMetaData.plist")
           default.getOrElse(
             throw new FatalError(
-              s"file ${app.path} does not have an iTunesMetaData.plist"
+              s"file ${app.escaped_path} does not have an iTunesMetaData.plist"
             )
           )
       }

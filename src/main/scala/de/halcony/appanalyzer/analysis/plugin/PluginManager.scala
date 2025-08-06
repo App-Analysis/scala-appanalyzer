@@ -167,63 +167,6 @@ object PluginManager extends LogSupport {
         manager.get
     }
 
-  val parser: Parser = Parser("plugin", "manage the installed plugins")
-    .addSubparser(
-      Parser("list", "list all installed plugins")
-        .addSubparser(
-          Parser("installed", "list all installed plugins")
-            .addDefault[(ParsingResult, HasPluginManagerConfiguration) => Unit](
-              "func",
-              listPlugins,
-              "list all installed plugins"
-            )
-        )
-        .addSubparser(
-          Parser("available", "list all available plugins")
-            .addFlag("all", "a", "all", "if set list all available versions")
-            .addOptional(
-              "filter",
-              "f",
-              "filter",
-              None,
-              "a regexp to filter plugins"
-            )
-            .addDefault[(ParsingResult, HasPluginManagerConfiguration) => Unit](
-              "func",
-              availablePlugins,
-              "list all online available plugins"
-            )
-        )
-    )
-    .addSubparser(
-      Parser("install", "install a plugin")
-        .addFlag(
-          "update",
-          "u",
-          "update",
-          "if set updates the plugin to the most current version"
-        )
-        .addFlag(
-          "force",
-          "f",
-          "force",
-          "if set removes an already installed version of the plugin"
-        )
-        .addOptional(
-          "version",
-          "r",
-          "revision",
-          None,
-          "if set will install (if available) the specified version of the plugin"
-        )
-        .addPositional("plugin", "the name of the plugin")
-        .addDefault[(ParsingResult, HasPluginManagerConfiguration) => Unit](
-          "func",
-          installPlugin,
-          "install/update a named plugin"
-        )
-    )
-
   /** main to list all plugins already installed
     *
     * @param pargs
@@ -270,6 +213,7 @@ object PluginManager extends LogSupport {
     plugins.toList
   }
 
+  // todo: this seems broken
   /** list all available plugins based on the configured remote repositories
     *
     * @param pargs

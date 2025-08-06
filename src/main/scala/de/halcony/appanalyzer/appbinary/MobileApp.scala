@@ -2,19 +2,20 @@ package de.halcony.appanalyzer.appbinary
 
 import de.halcony.appanalyzer.database.Postgres
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems
-import PlatformOperatingSystems.{ANDROID, PlatformOS, IOS}
+import PlatformOperatingSystems.{ANDROID, IOS, PlatformOS}
 import de.halcony.appanalyzer
 import scalikejdbc.scalikejdbcSQLInterpolationImplicitDef
 import wvlet.log.LogSupport
+
+import java.nio.file.Path
 
 case class MobileApp(
     id: String,
     version: String,
     os: PlatformOS,
-    private val _path: String
+    path: Path
 ) extends LogSupport {
-  val path: String = s""""${_path}""""
-  val serializedPath: String = _path
+  def escaped_path: String = s""""${path.toString}""""
 
   /** get the os in string format
     *
@@ -73,5 +74,4 @@ object MobileApp {
       case "ios"     => IOS
     }
   }
-
 }

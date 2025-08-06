@@ -71,6 +71,6 @@ case class APK(conf: Config) extends Analysis with LogSupport {
       app: MobileApp,
       @nowarn default: Option[String]
   ): String = {
-    getAppId(app.path)
+    getAppId(app.escaped_path)
   }
 }
