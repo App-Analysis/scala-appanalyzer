@@ -47,9 +47,10 @@ class MitmAddon:
     def tls_failed_client(self, data: mitmproxy.tls.TlsData):
         error = data.conn.error
         sni = data.conn.sni
+        rnd_uuid =  f'{uuid.uuid4()}'
         # logging.error(error + " " + sni)
-        self.cur.execute("INSERT INTO request(run,start_time,host,scheme,error) VALUES (%s,NOW(),%s,'https',%s);",
-                         (self.run_id, sni, error))
+        self.cur.execute("INSERT INTO request(id,run,start_time,host,scheme,error) VALUES (%s,NOW(),%s,'https',%s);",
+                         (rnd_uuid,self.run_id, sni, error))
         self.conn.commit()
 
     def request(self, flow: http.HTTPFlow):
@@ -99,7 +100,7 @@ class MitmAddon:
         response_id = str(uuid.uuid4())
         # logger.info(f"Request ID in response: {request_id}")
         self.cur.execute(
-            "INSERT INTO response (response_id, run, request, start_time, http_version, status_code, reason, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
+            "INSERT INTO response (id, run, request, start_time, http_version, status_code, reason, content_raw) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;",
             (response_id, self.run_id, request_id, datetime.fromtimestamp(r.timestamp_start), r.http_version, r.status_code, r.reason,
             r.content))
         self.conn.commit()
