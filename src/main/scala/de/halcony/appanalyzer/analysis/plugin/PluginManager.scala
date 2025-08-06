@@ -5,7 +5,6 @@ import de.halcony.argparse.{OptionalValue, Parser, ParsingResult}
 import org.clapper.classutil.{ClassFinder, ClassInfo}
 import spray.json.{JsArray, JsonParser}
 import wvlet.log.LogSupport
-
 import java.io.{File, FileOutputStream}
 import java.net.http.HttpResponse.BodyHandlers
 import java.net.http.{HttpClient, HttpRequest}
@@ -245,18 +244,15 @@ object PluginManager extends LogSupport {
       }
   }
 
-  /** installs or updates a plugin using command-line parameters and plugin
-    * manager configuration.
-    *
-    * @param pargs
-    *   the parsed command-line arguments
-    * @param conf
-    *   the parsed configuration
-    * @throws NoSuchPlugin
-    *   if the specified plugin or requested version cannot be found.
-    * @throws RuntimeException
-    *   if the plugin JAR download fails (non-200 HTTP status code).
-    */
+  /** installs or updates a plugin using command-line parameters and plugin manager configuration.
+  *
+  * @param pargs 
+  *   the parsed command-line arguments
+  * @param conf  
+  *   the parsed configuration
+  * @throws NoSuchPlugin if the specified plugin or requested version cannot be found.
+  * @throws RuntimeException if the plugin JAR download fails (non-200 HTTP status code).
+  */
   def installPlugin(
       pargs: ParsingResult,
       conf: HasPluginManagerConfiguration

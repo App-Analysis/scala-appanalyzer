@@ -10,17 +10,16 @@ import wvlet.log.LogSupport
 
 import java.net.URL
 import java.util
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 class iOSAppium(conf: Config) extends Appium with LogSupport {
 
   override protected var driver: Option[AppiumDriver] = None
 
   /** extract all UI elements from the iOS app's UI
-    *
-    * @return
-    *   a list of WebElement objects representing the UI elements
-    */
+  *
+  * @return a list of WebElement objects representing the UI elements
+  */
   override def getAllElements: List[WebElement] = {
     info("extracting elements from UI")
     val ret = this.driver.get
@@ -33,10 +32,9 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
   }
 
   /** repeatedly handle alert dialogs by detecting and interacting with them
-    *
-    * @return
-    *   true if at least one alert was successfully addressed, false otherwise
-    */
+  *
+  * @return true if at least one alert was successfully addressed, false otherwise
+  */
   def adressingAllAlerts(): Boolean = {
     val ALERT_TEXT_REGEXP = conf.ios.permissionPopup.text.map(_.r.unanchored)
     val ALLOW_BUTTON_TEXT =
@@ -98,14 +96,11 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
     gotRid
   }
 
-  /** dismiss all alert dialogs currently present on the screen based on
-    * configuration
-    *
-    * @param conf
-    *   the configuration containing alert text patterns and button settings
-    * @return
-    *   true if any alert was dismissed, false otherwise
-    */
+  /** dismiss all alert dialogs currently present on the screen based on configuration
+  *
+  * @param conf the configuration containing alert text patterns and button settings
+  * @return true if any alert was dismissed, false otherwise
+  */
   def getRidOfAlerts(conf: Config): Boolean = {
     val alert: util.List[WebElement] = this.driver.get
       .asInstanceOf[IOSDriver]
@@ -160,13 +155,11 @@ class iOSAppium(conf: Config) extends Appium with LogSupport {
   }
 
   /** establish a connection to the iOS device using Appium
-    *
-    * Configures the desired capabilities and initializes the Appium driver for
-    * iOS
-    *
-    * @param appId
-    *   the identifier of the application to be set in the desired capabilities
-    */
+  *
+  * Configures the desired capabilities and initializes the Appium driver for iOS
+  *
+  * @param appId the identifier of the application to be set in the desired capabilities
+  */
   override protected def connect(appId: String): Unit = {
     val capabilities = new DesiredCapabilities()
     capabilities.setCapability("appium:automationName", "XCUITest")

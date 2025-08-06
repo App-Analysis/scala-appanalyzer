@@ -78,20 +78,20 @@ trait Device extends LogSupport {
 
   def uninstallApp(appId: String): Unit
 
-  def startApp(appId: String, noStartCheck: Boolean, retries: Int = 3): Unit
+  def startApp(appId: String, noStartCheck : Boolean, retries: Int = 3): Unit
 
   def closeApp(appId: String): Unit
 
   def performTouch(x: Int, y: Int): Unit
 
-  def restartApp(appId: String, noStartCheck: Boolean): Unit = {
+  def restartApp(appId: String, noStartCheck : Boolean): Unit = {
     closeApp(appId)
     startApp(appId, noStartCheck)
   }
 
   def setAppPermissions(appId: String): Unit
 
-  def resetAndRestartApp(app: MobileApp, noStartCheck: Boolean): Unit = {
+  def resetAndRestartApp(app: MobileApp, noStartCheck : Boolean): Unit = {
     uninstallApp(app.id)
     installApp(app)
     startApp(app.id, noStartCheck)
@@ -143,7 +143,7 @@ trait Device extends LogSupport {
     }
   }
 
-  def closePossibleBrowser(): Unit
+  def closePossibleBrowser() : Unit
 
   def assertForegroundApp(appId: String, throwable: Throwable): Unit = {
     getForegroundAppId match {
