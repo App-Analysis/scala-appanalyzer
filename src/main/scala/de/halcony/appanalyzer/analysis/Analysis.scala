@@ -38,6 +38,27 @@ import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 
+
+/** the Analysis class orchestrates the complete analysis process for a mobile app
+ *
+ * It manages the lifecycle of an analysis run including the initialization of traffic collection,
+ * interaction with the app interface via an actor plugin, error handling, and logging of analysis data
+ * to a database. The analysis can repeatedly interact with the app until the actor indicates completion
+ * or a fatal error occurs
+ *
+ * @param description    
+ *  A description for the analysis run
+ * @param app            
+ *  The mobile app to be analyzed
+ * @param actor          
+ *  The actor plugin that defines the analysis actions
+ * @param device         
+ *  The device on which the analysis is executed
+ * @param conf           
+ *  The configuration settings
+ * @param noAppStartCheck  
+ *  Flag to disable the check for app startup
+ */
 class Analysis(
     description: String,
     app: MobileApp,
@@ -54,6 +75,11 @@ class Analysis(
   private var running: Boolean = false
   private var collectInterfaceElements: Boolean = true
 
+  /** sets whether to collect interface elements during the analysis
+   *
+   * @param value 
+   *  true to collect interface elements; false otherwise
+   */
   def setCollectInterfaceElements(value: Boolean): Unit = {
     collectInterfaceElements = value
   }
@@ -67,28 +93,54 @@ class Analysis(
     running = value
   }
 
+  /** checks if the device is rooted
+   *
+   * @return true if the device is rooted, false otherwise
+   */
   def deviceIsRooted: Boolean = synchronized {
     device.ROOT
   }
 
+  /** retrieves the current running state of the analysis
+   *
+   * @return true if the analysis is running, false otherwise
+   */
   def getRunning: Boolean = synchronized {
     running
   }
 
+  /** sets the stop flag, indicating that the analysis should terminate
+   */
   private def setStop(): Unit = synchronized {
     stop = true
   }
 
+  /** checks whether the analysis has been signaled to stop
+   *
+   * If the stop flag is set, throws an AnalysisTookTooLong exception
+   */
   def checkStop(): Unit = synchronized {
     if (stop) {
       throw new AnalysisTookTooLong()
     }
   }
 
+  /** retrieves the unique identifier for this analysis run
+   *
+   * @return the analysis ID
+   */
   def getId: Int = id.get
 
+  /** returns the mobile app currently being analyzed
+   *
+   * @return the current MobileApp instance
+   */
   def getCurrentApp: MobileApp = app
 
+   /** starts a dummy traffic collection
+   *
+   * This is used for testing purposes
+   */
   def startDummyTrafficCollection(): Unit = {
     info("starting dummy traffic collection")
     activeTrafficCollection match {
@@ -102,6 +154,15 @@ class Analysis(
     }
   }
 
+  /** starts a traffic collection associated with the analysis
+   *
+   * @param related    
+   *  An Interface related to the traffic collection
+   * @param comment   
+   *   A comment describing the traffic collection
+   * @param parameters 
+   *  Optional additional parameters for the traffic collection
+   */
   def startTrafficCollection(
       related: Option[Interface],
       comment: String,
@@ -131,6 +192,11 @@ class Analysis(
     }
   }
 
+  /** retrieves the start time of the current traffic collection
+   *
+   * @return the ZonedDateTime when the traffic collection started
+   * @throws FatalError if traffic collection was never started
+   */
   def getTrafficCollectionStart: ZonedDateTime =
     trafficCollectionStart.getOrElse(
       throw new FatalError(
@@ -138,6 +204,9 @@ class Analysis(
       )
     )
 
+  /** stops the active traffic collection
+   *
+   */
   def stopTrafficCollection(): Unit = {
     info("stopping traffic collection")
     activeTrafficCollection match {
@@ -149,6 +218,13 @@ class Analysis(
     }
   }
 
+  /** collects and stores the current app's preferences
+   *
+   * @param comment 
+   *  A comment describing the preference collection
+   * @param context 
+   *  Optional context identifier
+   */
   def collectCurrentAppPreferences(
       comment: String,
       context: Option[Int] = None
@@ -182,6 +258,12 @@ class Analysis(
     }
   }
 
+  /** checks if the app is still running on the device
+   *
+   * @param fail 
+   *  true to throw an exception if the app is not running
+   * @return true if the app is running, false otherwise
+   */
   def checkIfAppIsStillRunning(fail: Boolean): Boolean = {
     if (app.id == "EMPTY") {
       true
@@ -208,6 +290,19 @@ class Analysis(
     }
   }
 
+   /** handles post-app startup tasks to retrieve the initial interface
+   *
+   * Depending on the platform, interacts with Appium to remove alerts and returns an Interface
+   * object representing the app's current state
+   *
+   * @param interfaceComment 
+   *  A comment for the interface
+   * @param appium           
+   *  The Appium instance used for interacting with the app
+   * @param device           
+   *  The device on which the app is running
+   * @return an Interface instance representing the current app interface
+   */
   private def handlePostAppStartup(
       interfaceComment: String,
       appium: Appium,
@@ -244,6 +339,12 @@ class Analysis(
     }
   }
 
+  /** performs the main analysis workflow
+   *
+   * This method sets the analysis as running, inserts a new analysis record into the database,
+   * and then uses Appium and the actor plugin to interact with the app until the actor indicates
+   * that no further actions are required or a fatal error occurs
+   */
   protected def performAnalysis(): Unit = {
     try {
       setRunning(true)
@@ -324,6 +425,11 @@ class Analysis(
     }
   }
 
+  /** inserts a new analysis record into the database
+   *
+   * Sets the analysis ID after successful insertion. Throws a RuntimeException if the analysis
+   * has already been inserted
+   */
   protected def insert(): Unit = {
     if (id.nonEmpty) {
       throw new RuntimeException(
@@ -356,6 +462,11 @@ class Analysis(
     }
   }
 
+  /** marks the analysis as finished by updating the end time and success flag in the database
+   *
+   * @param success 
+   *  true if the analysis completed successfully; false otherwise
+   */
   protected def finish(success: Boolean): Unit = {
     Postgres.withDatabaseSession { implicit session =>
       sql"""UPDATE interfaceanalysis
@@ -368,6 +479,17 @@ class Analysis(
     }
   }
 
+  /** records an encountered error during the analysis
+   *
+   * Depending on the type of error, logs the error and inserts an error record into the database
+   *
+   * @param err         
+   *  The error that occurred
+   * @param interfaceid 
+   *  An optional interface ID associated with the error
+   * @param silent      
+   *  If true, suppresses error logging
+   */
   def addEncounteredError(
       err: Throwable,
       interfaceid: Option[Int] = None,
@@ -404,16 +526,27 @@ class Analysis(
 
 object Analysis extends LogSupport {
 
+  /** exception indicating that the analysis took too long
+   */
   class AnalysisTookTooLong extends Throwable {
     override def getMessage: String = "analysis took too long, kill yeself!"
   }
 
   private var currentAnalysis: Option[Analysis] = None
 
+  /** sets the current active analysis
+   *
+   * @param analysis 
+   *  the Analysis instance to set as current
+   */
   private def setCurrentAnalysis(analysis: Analysis): Unit = synchronized {
     currentAnalysis = Some(analysis)
   }
 
+  /** signals the current analysis to stop by setting its stop flag
+   *
+   * @throws FatalError if no analysis is currently running
+   */
   private def stopCurrentAnalysis(): Unit = synchronized {
     currentAnalysis match {
       case Some(value) => value.setStop()
@@ -422,6 +555,10 @@ object Analysis extends LogSupport {
     }
   }
 
+  /** unsets the current analysis after it has completed
+   *
+   * @throws FatalError if attempting to unset an analysis that is still running
+   */
   private def unsetCurrentAnalysis(): Unit = synchronized {
     currentAnalysis match {
       case Some(analysis) if analysis.getRunning =>
@@ -441,6 +578,23 @@ object Analysis extends LogSupport {
     currentAnalysis = None
   }
 
+  /** runs the analysis for a given mobile app
+   *
+   * Ensures that the device is ready, installs the app if necessary, and repeatedly invokes the actor plugin
+   * to interact with the app until the actor signals completion. 
+   * Also performs cleanup tasks such as uninstalling the app and clearing stuck modals.
+   *
+   * @param actor         
+   *  The actor plugin to drive the analysis
+   * @param app           
+   *  The mobile app to analyze
+   * @param device        
+   *  The device on which the app is executed
+   * @param conf          
+   *  The configuration settings
+   * @param noAppStartCheck 
+   *  Flag to bypass the app startup check
+   */
   def runAnalysis(
       actor: ActorPlugin,
       app: MobileApp,
@@ -540,5 +694,4 @@ object Analysis extends LogSupport {
       info(s"analysis of app $app is done")
     } finally {}
   }
-
 }

@@ -71,6 +71,13 @@ class AppManifest(
         error(s"An error occurred while writing to file ${e.getMessage}")
     }
   }
+
+
+  /** retrieve an immutable map representing the current manifest
+  *
+  * @return a map of app IDs to MobileApp instances
+  */
+  def getManifest: Map[String, MobileApp] = manifest.toMap
 }
 
 object AppManifest extends LogSupport {
@@ -143,6 +150,7 @@ object AppManifest extends LogSupport {
       .to(mutable.Set)
   }
 
+
   /** Not changed. Analyzes the app binary and returns a MobileApp object.
     * @return
     *   A try object of an app, depending on success or failure
@@ -162,6 +170,7 @@ object AppManifest extends LogSupport {
     }
   }
 
+
   /** not changed uses the apk config to invoke dexdump
     * @return
     *   a success or failure object of a MobileApp
@@ -178,7 +187,7 @@ object AppManifest extends LogSupport {
         Failure(x)
     }
   }
-
+    
   /** Get the apps from the provided path. If the path is a directory we return
     * all files ending with the suffix. If the path is a file we return the file
     * if it ends with the suffix. Using the Java NIO package to handle paths and
@@ -421,6 +430,7 @@ object AppManifest extends LogSupport {
     }
     manifest
   }
+
 
   /** Saves the old manifest to a new file with a timestamp before we overwrite
     * it with the new manifest

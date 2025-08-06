@@ -69,7 +69,14 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
-  private def getBatchSize(pargs: ParsingResult): Option[Int] = {
+
+  /** retrieves the optional batch size stating the number of app analyzed in a bulk
+  *
+  * @param pargs 
+  *   the parsed command line arguments
+  * @return an Option containing the batch size as an integer, if present and valid
+  */
+  def getBatchSize(pargs: ParsingResult): Option[Int] = {
     try {
       Some(pargs.getValue[String]("batchSize").toInt)
     } catch {
@@ -116,6 +123,17 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
+  /** creates and returns a Device instance based on the provided platform argument.
+  *
+  * Matches the platform string from the command-line arguments to instantiate the corresponding
+  * device type (e.g., Android device with root, non-root, droidbot, emulator, or iOS).
+  *
+  * @param pargs 
+  *   the parsed command line arguments
+  * @param conf 
+  *   the configuration object
+  * @return an instance of Device corresponding to the specified platform
+  */
   private def getDevice(pargs: ParsingResult, conf: Config): Device = {
     pargs.getValue[String]("platform") match {
       case "android_device" =>
@@ -167,6 +185,15 @@ object AppAnalyzer extends LogSupport {
     }.toList
   }
 
+  /** determines the subset of app IDs to analyze based on a CSV list or file input.
+  *
+  * If the provided string represents a valid file path, the file is read and each line is considered an app ID.
+  * Otherwise, the string is split by commas to form the set of app IDs.
+  *
+  * @param only 
+  *   string representing either a CSV list or a file path with app IDs
+  * @return an Option containing a Set of app IDs to analyze, or None if not provided
+  */
   private def getOnlyApps(only: Option[String]): Option[Set[String]] = {
     only match {
       case Some(onlyElement) =>
@@ -316,7 +343,18 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
-  def runPluginExperiment(pargs: ParsingResult, conf: Config): Unit = {
+  /**
+  * Initiates an analysis experiment using a specified plugin.
+  *
+  * Extracts plugin parameters, retrieves the corresponding plugin from the PluginManager,
+  * and delegates the experiment execution to the runExperiment function.
+  *
+  * @param pargs 
+  *   the parsed command line arguments
+  * @param conf 
+  *   the configuration object
+  */
+  private def runPluginExperiment(pargs: ParsingResult, conf: Config): Unit = {
     val pluginName = pargs.getValue[String]("plugin")
     val empty = pargs.getValue[Boolean]("empty")
     val parameters: Map[String, String] = extract_parameters(pargs)
@@ -476,6 +514,16 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
+  /** extracts key-value parameters for analysis from the parsed command-line arguments.
+  *
+  * Supports both direct CSV input and file input containing key=value pairs.
+  * Parses the input into a Map of parameter keys and values. Throws an exception if any
+  * element is malformed.
+  *
+  * @param pargs 
+  *   the parsed command line arguments
+  * @return a Map containing the parameter keys and their corresponding values
+  */
   private def extract_parameters(pargs: ParsingResult): Map[String, String] = {
     val parameters: Option[String] =
       pargs.get[OptionalValue[String]]("parameters").value
@@ -514,6 +562,12 @@ object AppAnalyzer extends LogSupport {
     }
   }
 
+  /** checks if the provided string represents an existing file path.
+  *
+  * @param str 
+  *   the string to check as a file path
+  * @return true if the file exists, false otherwise
+  */
   private def is_filepath(str: String): Boolean = {
     new File(str).exists()
   }

@@ -244,6 +244,15 @@ object PluginManager extends LogSupport {
       }
   }
 
+  /** installs or updates a plugin using command-line parameters and plugin manager configuration.
+  *
+  * @param pargs 
+  *   the parsed command-line arguments
+  * @param conf  
+  *   the parsed configuration
+  * @throws NoSuchPlugin if the specified plugin or requested version cannot be found.
+  * @throws RuntimeException if the plugin JAR download fails (non-200 HTTP status code).
+  */
   def installPlugin(
       pargs: ParsingResult,
       conf: HasPluginManagerConfiguration
@@ -255,11 +264,15 @@ object PluginManager extends LogSupport {
     val forced = pargs.getValue[Boolean]("force")
     val update = pargs.getValue[Boolean]("update")
     val version = pargs.get[OptionalValue[String]]("version").value
+
+    // Ensure no version is provided when updating
     if (update)
       assert(
         version.isEmpty,
         "you cannot provide a version for update use `install --force --release <version>`"
       )
+
+    // Find the plugin in the available plugins
     val plugin = pargs.getValue[String]("plugin")
     conf.getPluginManagerConfiguration.available.find { case (key, _) =>
       plugin.r.unanchored.matches(key)
@@ -267,6 +280,7 @@ object PluginManager extends LogSupport {
       case None => throw NoSuchPlugin(plugin, version)
       case Some(remoteTarget) =>
         val releases = getReleases(client, remoteTarget._2)
+        // Get available releases for the plugin
         val target: RemoteGithubRelease = version match {
           case Some(version) =>
             releases
@@ -275,12 +289,15 @@ object PluginManager extends LogSupport {
           case None => releases.head
         }
         info(s"installing plugin ${remoteTarget._1} ${target.getVersion}")
+
+        // Check if the plugin is already installed
         val manager = getPluginManager(conf)
         manager.getInstalledPlugins.find { case (name, _) =>
           name == remoteTarget._1
         } match {
           case Some((_, version)) =>
             warn(s"a previous version ($version) is already installed")
+            // Remove the old version if forced or updating
             if (forced || update) {
               warn("removing old version")
               manager.removePlugin(remoteTarget._1)
@@ -290,14 +307,20 @@ object PluginManager extends LogSupport {
           case None =>
         }
         info(s"downloading plugin ${remoteTarget._1} ${target.getVersion}")
+
+        // Build and send the HTTP request
         val request =
           HttpRequest.newBuilder().uri(URI.create(target.jarDownloadLink))
         val ret = client.send(request.build(), BodyHandlers.ofByteArray())
+
+        // Check if the download was successful
         if (ret.statusCode() != 200) {
           throw new RuntimeException(
             s"download jar returned ${ret.statusCode()} for ${target.jarDownloadLink}"
           )
         }
+
+        // Write the downloaded jar to the plugin folder
         val jarName = target.jarDownloadLink.split("/").last
         val fileWriter = new FileOutputStream(
           new File(conf.getPluginManagerConfiguration.folder + "/" + jarName)
@@ -310,5 +333,4 @@ object PluginManager extends LogSupport {
         }
     }
   }
-
 }
