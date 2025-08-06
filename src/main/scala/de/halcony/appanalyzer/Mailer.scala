@@ -28,18 +28,17 @@ class Mailer(email_config: Email) extends LogSupport {
   // properties.setProperty("mail.password", password)
   properties.setProperty("mail.smtp.auth", "true")
 
-  /**
-   * Sends an email with the specified subject and content.
-   *
-   * This method creates a JavaMail session,
-   * constructs a MIME message with the given subject and text content, and sends
-   * the email to all recipients specified in the configuration.
-   *
-   * @param subject 
-   *  the subject of the email
-   * @param content 
-   *  the body text of the email
-   */
+  /** Sends an email with the specified subject and content.
+    *
+    * This method creates a JavaMail session, constructs a MIME message with the
+    * given subject and text content, and sends the email to all recipients
+    * specified in the configuration.
+    *
+    * @param subject
+    *   the subject of the email
+    * @param content
+    *   the body text of the email
+    */
   def send_email(subject: String, content: String): Unit = {
     val session = Session.getInstance(
       properties,

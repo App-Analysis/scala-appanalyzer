@@ -132,7 +132,11 @@ case class iOSDevice(conf: Config) extends Device with LogSupport {
     }
   }
 
-  override def startApp(appId: String, noAppStartCheck : Boolean, retries: Int): Unit = {
+  override def startApp(
+      appId: String,
+      noAppStartCheck: Boolean,
+      retries: Int
+  ): Unit = {
     val cmd =
       s"sshpass -p ${conf.ios.rootpwd} ssh root@${conf.ios.ip} open $appId"
     cmd.!

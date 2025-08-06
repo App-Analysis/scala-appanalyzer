@@ -4,7 +4,7 @@ The scala-appanalyzer is a tool for traffic collection for mobile applications
 for iOS, Android and AVDs (Android Emulators). It allows for plugin import
 to enable a wide range of functions.
 
-**Note:** We are currently in the process of removing iOS as keeping up with iOS prooved too difficult as most of our plugins require root access.
+**Note:** We are currently in the process of removing iOS as keeping up with iOS proved too difficult as most of our plugins require root access.
 
 ## "global" requirements
 
@@ -16,7 +16,7 @@ to enable a wide range of functions.
 | [node & npm](https://nodejs.org/en)                                  | recommended: node 16 & npm 8 |
 | [frida](https://frida.re/)                                           | ```npm i -g frida```         |
 | [Appium](http://appium.io/docs/en/2.0/)                              | ```npm i -g appium```        |
-| [OpenJDK](https://openjdk.org/)                                      | Java 17                      |
+| [OpenJDK](https://openjdk.org/)                                      | Java >= 17                   |
 | [scala](https://www.scala-lang.org/)                                 | via package manager          |
 | [sbt](https://www.scala-sbt.org/download.html)                       | via package manager          |
 | [Postgres](https://www.postgresql.org/)                              | via package manager          |

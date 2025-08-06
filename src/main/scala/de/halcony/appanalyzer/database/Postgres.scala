@@ -9,9 +9,10 @@ object Postgres {
   private val POOL_NAME = "appanalyzer"
 
   /** initialize the PostgreSQL connection pool using the provided configuration
-  *
-  * @param conf the configuration containing database connection details
-  */
+    *
+    * @param conf
+    *   the configuration containing database connection details
+    */
   def initializeConnectionPool(conf: Config): Unit = {
     if (!poolSet) {
       val settings: ConnectionPoolSettings = ConnectionPoolSettings(
@@ -27,11 +28,14 @@ object Postgres {
   }
 
   /** execute a function within a database session and local transaction
-  *
-  * @param func the function to execute with the DBSession
-  * @return the result of the function execution
-  * @throws RuntimeException if the connection pool has not been initialized
-  */
+    *
+    * @param func
+    *   the function to execute with the DBSession
+    * @return
+    *   the result of the function execution
+    * @throws RuntimeException
+    *   if the connection pool has not been initialized
+    */
   def withDatabaseSession[T](func: DBSession => T): T = {
     if (poolSet) {
       using(ConnectionPool(POOL_NAME).borrow()) { con =>

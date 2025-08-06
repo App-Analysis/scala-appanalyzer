@@ -13,11 +13,14 @@ object ManifestAttributes extends Enumeration {
 case class ApkAnalyzer(apkAnalyzerPath: String) {
 
   /** retrieve a manifest attribute from the APK file using the apkAnalyzer tool
-  *
-  * @param apk the path to the APK file
-  * @param attribute the manifest attribute to retrieve
-  * @return the extracted manifest attribute value as a String
-  */
+    *
+    * @param apk
+    *   the path to the APK file
+    * @param attribute
+    *   the manifest attribute to retrieve
+    * @return
+    *   the extracted manifest attribute value as a String
+    */
   def getManifestAttribute(
       apk: String,
       attribute: ManifestAttributes.ManifestAttribute

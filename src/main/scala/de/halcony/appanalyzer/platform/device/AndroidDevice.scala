@@ -7,9 +7,7 @@ import de.halcony.appanalyzer.platform.frida.FridaScripts
 import de.halcony.appanalyzer.platform.PlatformOperatingSystems.{ANDROID, PlatformOS}
 import de.halcony.appanalyzer.platform.exceptions.{AppClosedItself, FatalError, FridaDied, UnableToInstallApp, UnableToStartApp, UnableToUninstallApp}
 import wvlet.log.LogSupport
-
-import java.io.{BufferedWriter, FileWriter}
-import java.nio.file.Path
+import java.io.{BufferedWriter, File, FileWriter}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, MILLISECONDS}
@@ -24,18 +22,21 @@ case class AndroidDevice(conf: Config, device: Option[String])
   private var deactivate_install = false
 
   /** set whether app installation should be deactivated
-  *
-  * @param deactivate the boolean flag to deactivate app installation if true
-  */
+    *
+    * @param deactivate
+    *   the boolean flag to deactivate app installation if true
+    */
   def deactivateInstall(deactivate: Boolean): Unit = {
     deactivate_install = deactivate
   }
 
   /** write a log message to the Frida log file with the given output type
-  *
-  * @param outType the type of output (e.g., "info", "error")
-  * @param msg the message to log
-  */
+    *
+    * @param outType
+    *   the type of output (e.g., "info", "error")
+    * @param msg
+    *   the message to log
+    */
   private def writeFridaLog(outType: String, msg: String): Unit = synchronized {
     val writer = new BufferedWriter(new FileWriter(FRIDA_LOG_FILE, true))
     try {
@@ -64,34 +65,40 @@ case class AndroidDevice(conf: Config, device: Option[String])
   private var runningFrida: Option[Process] = None
 
   /** start the device
-  *
-  * This method is a no-op as the smartphone is assumed to be already on.
-  */
+    *
+    * This method is a no-op as the smartphone is assumed to be already on.
+    */
   override def startDevice()
       : Unit = {} // the smartphone is supposed to be already on
 
   /** get the ADB configuration string for the device
-  *
-  * @return a string containing the ADB device identifier if specified, otherwise an empty string
-  */
+    *
+    * @return
+    *   a string containing the ADB device identifier if specified, otherwise an
+    *   empty string
+    */
   protected def getDeviceConfStringAdb: String = device match {
     case Some(value) => s"-s $value"
     case None        => ""
   }
 
   /** get the configuration string for the objection tool for the device
-  *
-  * @return a string containing the objection device identifier if specified, otherwise an empty string
-  */
+    *
+    * @return
+    *   a string containing the objection device identifier if specified,
+    *   otherwise an empty string
+    */
   protected def getDeviceConfStringObjection: String = device match {
     case Some(value) => s"-S $value"
     case None        => ""
   }
 
   /** detect if a Frida server process is currently running on the device
-  *
-  * @return an Option containing the process ID of the running Frida server if found, otherwise None
-  */
+    *
+    * @return
+    *   an Option containing the process ID of the running Frida server if
+    *   found, otherwise None
+    */
   private def detectRunningFrida(): Option[String] = {
     val cmd =
       s"${conf.android.adb} $getDeviceConfStringAdb shell 'ps -e | grep frida-server'"
@@ -120,30 +127,42 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** retrieve the set of installed app package names on the device
-  *
-  * @return a set of strings representing the installed app package names
-  */
+    *
+    * @return
+    *   a set of strings representing the installed app package names
+    */
   override def getInstalledApps: Set[String] = {
-    s"${conf.android.adb} $getDeviceConfStringAdb shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!.split(
+    val cmd =
+      s"${conf.android.adb} $getDeviceConfStringAdb shell pm list packages -f"
+    val listOfApps = cmd.!!.split("\n").toList
+    // println(listOfApps)
+    listOfApps
+      .filter(_.startsWith("package:/data/app/"))
+      .map(_.split("=").last)
+      .toSet
+    /*s"${conf.android.adb} $getDeviceConfStringAdb shell pm list packages -f | grep '/data/app/' | sed -e 's/.*=//'".!!.split(
       "\n"
-    ).toSet
+    ).toSet*/
   }
 
   /** kill a process on the device by its process ID
-  *
-  * @param pid the process ID to kill
-  */
+    *
+    * @param pid
+    *   the process ID to kill
+    */
   private def killProcess(pid: String): Unit = {
     s"${conf.android.adb} $getDeviceConfStringAdb shell 'su -c kill -9 $pid'".!!
   }
 
   /** start the Frida server on the device
-  *
-  * This method starts the Frida server and logs its output. If Frida is already running,
-  * it attempts to kill the existing process before starting a new one.
-  *
-  * @throws FridaDied if the Frida server fails to start properly
-  */
+    *
+    * This method starts the Frida server and logs its output. If Frida is
+    * already running, it attempts to kill the existing process before starting
+    * a new one.
+    *
+    * @throws FridaDied
+    *   if the Frida server fails to start properly
+    */
   override def startFrida(): Unit = {
     info("starting frida")
     if (runningFrida.nonEmpty) {
@@ -180,9 +199,10 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** stop the running Frida server on the device
-  *
-  * This method stops the Frida server process and ensures it is no longer running.
-  */
+    *
+    * This method stops the Frida server process and ensures it is no longer
+    * running.
+    */
   override def stopFrida(): Unit = {
     info("stopping frida")
     runningFrida match {
@@ -205,12 +225,15 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** execute a block of code with a running Frida server
-  *
-  * Starts the Frida server, executes the provided function, and stops the Frida server afterwards.
-  *
-  * @param func the block of code to execute while Frida is running
-  * @return the result of the executed function
-  */
+    *
+    * Starts the Frida server, executes the provided function, and stops the
+    * Frida server afterwards.
+    *
+    * @param func
+    *   the block of code to execute while Frida is running
+    * @return
+    *   the result of the executed function
+    */
   override def withRunningFrida[T](func: => T): T = {
     startFrida()
     try {
@@ -221,9 +244,9 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** clean up the objection process if it is running
-  *
-  * If an objection process is active, it is destroyed and reset to None.
-  */
+    *
+    * If an objection process is active, it is destroyed and reset to None.
+    */
   private def cleanObjectionProcess(): Unit = objection match {
     case Some(value) =>
       if (value.isAlive()) {
@@ -234,12 +257,15 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** get the analysis tool for app package analysis
-  *
-  * Returns an existing Analysis instance if available, or creates a new APK analysis instance.
-  *
-  * @param conf the configuration settings
-  * @return an Analysis instance for app package analysis
-  */
+    *
+    * Returns an existing Analysis instance if available, or creates a new APK
+    * analysis instance.
+    *
+    * @param conf
+    *   the configuration settings
+    * @return
+    *   an Analysis instance for app package analysis
+    */
   override def getAppPackageAnalysis(conf: Config): Analysis =
     packageAnalysis match {
       case Some(value) => value
@@ -249,25 +275,27 @@ case class AndroidDevice(conf: Config, device: Option[String])
     }
 
   /** ensure that a device is reachable via ADB
-  *
-  * Checks if the device is accessible and reachable; if not, throws a FatalError.
-  */
+    *
+    * Checks if the device is accessible and reachable; if not, throws a
+    * FatalError.
+    */
   override def ensureDevice(): Unit = {
     if (initiallyInstalledApps.isEmpty) {
       initiallyInstalledApps = Some(getInstalledApps)
     }
     val ret =
-      s"${conf.android.adb} $getDeviceConfStringAdb get-state" ! ProcessLogger(_ =>
-        ()
+      s"${conf.android.adb} $getDeviceConfStringAdb get-state" ! ProcessLogger(
+        _ => ()
       )
     if (ret != 0)
       throw new FatalError("there is no device reachable via adb")
   }
 
   /** restart the host ADB server
-  *
-  * Restarts the ADB server on the host machine to recover from connectivity issues
-  */
+    *
+    * Restarts the ADB server on the host machine to recover from connectivity
+    * issues
+    */
   protected def restartAdb(): Unit = {
     warn("restarting host adb server")
     s"${conf.android.adb} $getDeviceConfStringAdb kill-server".!!
@@ -275,25 +303,28 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** reset the device state
-  *
-  */
+    */
   override def resetDevice(): Unit = {
     cleanObjectionProcess()
   }
 
   /** simulate a touch input on the device at the specified coordinates
-  *
-  * @param x the x-coordinate for the touch
-  * @param y the y-coordinate for the touch
-  */
+    *
+    * @param x
+    *   the x-coordinate for the touch
+    * @param y
+    *   the y-coordinate for the touch
+    */
   override def performTouch(x: Int, y: Int): Unit = {
     s"${conf.android.adb} $getDeviceConfStringAdb shell input tap $x $y".!
   }
 
   /** check whether the device has completed booting
-  *
-  * @return true if the device is booted (sys.boot_completed is "1"), false otherwise
-  */
+    *
+    * @return
+    *   true if the device is booted (sys.boot_completed is "1"), false
+    *   otherwise
+    */
   override def checkBootState(): Boolean = {
     try {
       s"${conf.android.adb} $getDeviceConfStringAdb shell 'getprop sys.boot_completed'".!!.trim == "1"
@@ -304,12 +335,15 @@ case class AndroidDevice(conf: Config, device: Option[String])
 
   // todo: I have seen (once) that the screen goes dark on reboot unsure if this could become a permanent issue
   /** restart the phone and ensure it boots up correctly
-  *
-  * Reboots the device, waits for it to boot, unlocks it, and optionally restarts Frida if it was running
-  *
-  * @return true if the phone restarted successfully
-  * @throws FatalError if the device fails to boot or if a fatal error occurs during restart
-  */
+    *
+    * Reboots the device, waits for it to boot, unlocks it, and optionally
+    * restarts Frida if it was running
+    *
+    * @return
+    *   true if the phone restarted successfully
+    * @throws FatalError
+    *   if the device fails to boot or if a fatal error occurs during restart
+    */
   override def restartPhone(): Boolean = {
     info("performing phone restart")
     val fridaWasRunning = runningFrida.nonEmpty
@@ -317,7 +351,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       stopFrida()
     s"${conf.android.adb} $getDeviceConfStringAdb reboot".!
     var counter = 1
-    while (!checkBootState() && counter < 10) { // a more dynamic reboot procedure
+    while (!this.checkBootState() && counter < 10) { // a more dynamic reboot procedure
       Thread.sleep(30000)
       counter = counter + 1
       if (
@@ -326,7 +360,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
         restartAdb()
     }
     if (
-      !checkBootState()
+      !this.checkBootState()
     ) // if we are still not booted something horrible happened which is also fatal
       throw new FatalError(
         "we were unable to successfully restart the phone ... sucks mate"
@@ -345,7 +379,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       startFrida()
     Thread.sleep(1000)
     try {
-      if (!checkBootState()) {
+      if (!this.checkBootState()) {
         throw new FatalError("getprop sys.boot_completed was not 1")
       }
     } catch {
@@ -360,23 +394,29 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** clear any stuck modal dialogs on the device
-  *
-  */
+    */
   override def clearStuckModals(): Unit = {}
 
   /** install an app on the device
-  *
-  * Uses ADB to install the app and grants required permissions
-  *
-  * @param app the MobileApp instance representing the app to install
-  * @throws UnableToInstallApp if the installation fails
-  */
+    *
+    * Uses ADB to install the app and grants required permissions
+    *
+    * @param app
+    *   the MobileApp instance representing the app to install
+    * @throws UnableToInstallApp
+    *   if the installation fails
+    */
   override def installApp(app: MobileApp): Unit = {
-    info(s"installing on device ${app.escaped_path}")
+    info(s"installing on device ${app.id} located at ${app.path}")
     val stdio: ListBuffer[String] = ListBuffer()
     val stderr: ListBuffer[String] = ListBuffer()
+    val fixedPath = app.path.replace("\"", "")
+    val files = new File(fixedPath)
+      .listFiles()
+      .filter(_.getName.endsWith(".apk"))
+      .map(_.getAbsolutePath)
     val cmd =
-      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${app.escaped_path}"
+      s"${conf.android.adb} $getDeviceConfStringAdb install-multiple -g ${files.mkString(" ")}"
     val ret =
       if (conf.verbose) cmd.!
       else
@@ -392,12 +432,15 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** uninstall an app from the device
-  *
-  * Attempts to uninstall the app using ADB with multiple retries, handling various error codes.
-  *
-  * @param appId the package name of the app to uninstall
-  * @throws UnableToUninstallApp if the app cannot be uninstalled after retries
-  */
+    *
+    * Attempts to uninstall the app using ADB with multiple retries, handling
+    * various error codes.
+    *
+    * @param appId
+    *   the package name of the app to uninstall
+    * @throws UnableToUninstallApp
+    *   if the app cannot be uninstalled after retries
+    */
   override def uninstallApp(appId: String): Unit = {
     cleanObjectionProcess()
     val UNINSTALL_TIMEOUT_MS: Long = 30000 // 30 seconds
@@ -470,13 +513,21 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** start an app on the device using objection
-  *
-  * @param appId the package name of the app to start
-  * @param noStartCheck if true, skips the verification of the app being in the foreground
-  * @param retries the maximum number of startup attempts
-  * @throws UnableToStartApp if the app fails to start after the specified retries
-  */
-  override def startApp(appId: String, noStartCheck : Boolean, retries: Int = 3): Unit = {
+    *
+    * @param appId
+    *   the package name of the app to start
+    * @param noStartCheck
+    *   if true, skips the verification of the app being in the foreground
+    * @param retries
+    *   the maximum number of startup attempts
+    * @throws UnableToStartApp
+    *   if the app fails to start after the specified retries
+    */
+  override def startApp(
+      appId: String,
+      noStartCheck: Boolean,
+      retries: Int = 3
+  ): Unit = {
     var counter = 0
     var done = false
     var stdio = ListBuffer[String]()
@@ -499,7 +550,7 @@ case class AndroidDevice(conf: Config, device: Option[String])
       if (objection.get.isAlive()) {
         val fgid = getForegroundAppId.getOrElse(throw AppClosedItself(appId))
         // chrome indicates a TWA or CT startup
-        if ( (fgid != appId && fgid != "com.android.chrome") && !noStartCheck) {
+        if ((fgid != appId && fgid != "com.android.chrome") && !noStartCheck) {
           warn(s"foreground id is wrong : '$fgid' instead of '$appId'")
           closeApp(appId)
         } else {
@@ -527,10 +578,10 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** close any running browser (Chrome) on the device
-  *
-  * Attempts to force-stop the Chrome browser using ADB.
-  */
-  override def closePossibleBrowser() : Unit = {
+    *
+    * Attempts to force-stop the Chrome browser using ADB.
+    */
+  override def closePossibleBrowser(): Unit = {
     val browserAppId = "com.android.chrome"
     val cmd =
       s"${conf.android.adb} $getDeviceConfStringAdb shell am force-stop $browserAppId"
@@ -538,11 +589,12 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** close the specified app on the device
-  *
-  * Closes any possible browser and then force-stops the app using ADB.
-  *
-  * @param appId the package name of the app to close
-  */
+    *
+    * Closes any possible browser and then force-stops the app using ADB.
+    *
+    * @param appId
+    *   the package name of the app to close
+    */
   override def closeApp(appId: String): Unit = {
     closePossibleBrowser()
     cleanObjectionProcess()
@@ -553,9 +605,10 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** set all required permissions for the specified app
-  *
-  * @param appId the package name of the app for which to set permissions
-  */
+    *
+    * @param appId
+    *   the package name of the app for which to set permissions
+    */
   override def setAppPermissions(appId: String): Unit = {
     info(s"setting permissions for $appId")
     val cmd =
@@ -592,9 +645,11 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }*/
 
   /** get the package name of the app currently in the foreground
-  *
-  * @return an Option containing the package name of the foreground app, or None if not found
-  */
+    *
+    * @return
+    *   an Option containing the package name of the foreground app, or None if
+    *   not found
+    */
   override def getForegroundAppId: Option[String] = {
     val cmd =
       s"${conf.android.adb} $getDeviceConfStringAdb shell dumpsys activity" // | grep -E 'mCurrentFocus' | cut -d '/' -f1 | sed 's/.* //g'"
@@ -618,11 +673,14 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** get the process ID (PID) of the specified app
-  *
-  * @param appid the package name of the app
-  * @return the process ID as a String
-  * @throws AppClosedItself if the app is no longer running
-  */
+    *
+    * @param appid
+    *   the package name of the app
+    * @return
+    *   the process ID as a String
+    * @throws AppClosedItself
+    *   if the app is no longer running
+    */
   override def getPid(appid: String): String = {
     try {
       val cmd =
@@ -635,11 +693,14 @@ case class AndroidDevice(conf: Config, device: Option[String])
     }
   }
 
-  /** retrieve preferences or configuration data for the specified app using Frida
-  *
-  * @param appId the package name of the app
-  * @return an Option containing the retrieved preferences as a String
-  */
+  /** retrieve preferences or configuration data for the specified app using
+    * Frida
+    *
+    * @param appId
+    *   the package name of the app
+    * @return
+    *   an Option containing the retrieved preferences as a String
+    */
   override def getPrefs(appId: String): Option[String] = {
     val script = FridaScripts.platform(this.PLATFORM_OS).getPrefs
     val pid = getPid(appId)
@@ -652,18 +713,22 @@ case class AndroidDevice(conf: Config, device: Option[String])
   }
 
   /** get platform-specific data for the specified app
-  *
-  * @param appId the package name of the app
-  * @return None
-  */
+    *
+    * @param appId
+    *   the package name of the app
+    * @return
+    *   None
+    */
   override def getPlatformSpecificData(appId: String): Option[String] =
     None
 
   /** retrieve the app version from the app at the specified path
-  *
-  * @param path the path to the app
-  * @return throws NotImplementedError
-  */
+    *
+    * @param path
+    *   the path to the app
+    * @return
+    *   throws NotImplementedError
+    */
   override def getAppVersion(path: String): Option[String] =
     throw new NotImplementedError()
 
